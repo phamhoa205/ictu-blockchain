@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản trị | ICTU Blockchain Reward System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         Top Navigation Bar
+         ========================================== -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="brand">
+                <div class="brand-logo">🎓</div>
+                <div class="brand-text">
+                    <h1>ICTU Reward System</h1>
+                    <span>Trang Quản trị Hệ thống Blockchain</span>
+                </div>
+            </a>
+
+            <div class="nav-status" id="blockchainStatusBadge">
+                <span class="status-dot"></span>
+                <span id="blockchainStatusText">Đang kiểm tra kết nối...</span>
+            </div>
+
+            <div class="nav-user">
+                <div class="user-badge">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-info">
+                        <span class="user-name" id="adminName">Admin</span>
+                        <span class="user-role-tag">HỆ THỐNG</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">
+                    🚪 Đăng xuất
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================
+         Navigation Tabs
+         ========================================== -->
+    <nav class="tabs-bar">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">
+            📊 Tổng quan & Thống kê
+        </button>
+        <button class="tab-btn" onclick="switchTab('issue')">
+            🎁 Trao thưởng Sinh viên
+        </button>
+        <button class="tab-btn" onclick="switchTab('students')">
+            👨‍🎓 Quản lý Sinh viên
+        </button>
+        <button class="tab-btn" onclick="switchTab('history')">
+            📜 Lịch sử Trao thưởng
+        </button>
+        <button class="tab-btn" onclick="switchTab('leaderboard')">
+            🏆 Bảng xếp hạng Top 10
+        </button>
+    </nav>
+
+    <!-- ==========================================
+         Main Wrapper
+         ========================================== -->
+    <main class="main-wrapper">
+
+        <!-- ==========================================
+             TAB 1: DASHBOARD
+             ========================================== -->
+        <section id="tab-dashboard" class="tab-content active">
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card card-students">
+                    <div class="metric-icon">👨‍🎓</div>
+                    <div class="metric-details">
+                        <div class="metric-title">Tổng số sinh viên</div>
+                        <div class="metric-value" id="statTotalStudents">0</div>
+                        <div class="metric-sub" id="statRewardedStudents">0 sinh viên đã nhận thưởng</div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-rewards">
+                    <div class="metric-icon">🏆</div>
+                    <div class="metric-details">
+                        <div class="metric-title">Tổng lượt trao thưởng</div>
+                        <div class="metric-value" id="statTotalRewards">0</div>
+                        <div class="metric-sub">Được xác thực trên Smart Contract</div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-tokens">
+                    <div class="metric-icon">🪙</div>
+                    <div class="metric-details">
+                        <div class="metric-title">Tổng Token đã phát hành</div>
+                        <div class="metric-value" id="statTotalTokens">0</div>
+                        <div class="metric-sub">Đơn vị: ICTU Token (ERC-20)</div>
+                    </div>
+                </div>
+
+                <div class="metric-card card-blocks">
+                    <div class="metric-icon">⛓️</div>
+                    <div class="metric-details">
+                        <div class="metric-title">Khối Blockchain hiện tại</div>
+                        <div class="metric-value" id="statCurrentBlock">#0</div>
+                        <div class="metric-sub" id="statChainId">Hardhat Local (Chain 31337)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action & Contract Info Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>⚙️ Thông tin Hợp đồng Thông minh (Smart Contracts)</h2>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="checkBlockchainHealth()">
+                            🔄 Làm mới trạng thái
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+                        <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            <h4 style="margin-bottom: 8px; color: var(--primary);">📄 RewardToken (ERC-20)</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Quản lý mint token, kiểm tra số dư và phân quyền MINTER_ROLE</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                <code class="mono" id="contractTokenAddress">0x5FbDB...80aa3</code>
+                                <button class="btn btn-icon btn-sm" onclick="copyToClipboard(currentContractAddresses.token, 'Địa chỉ Token')">📋</button>
+                            </div>
+                        </div>
+
+                        <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                            <h4 style="margin-bottom: 8px; color: var(--accent);">🏛️ RewardManager</h4>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Điều phối cấp phát thưởng, phát sự kiện RewardIssued và kiểm soát quyền Admin</p>
+                            <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                                <code class="mono" id="contractManagerAddress">0xe7f17...F0512</code>
+                                <button class="btn btn-icon btn-sm" onclick="copyToClipboard(currentContractAddresses.manager, 'Địa chỉ Manager')">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 2: ISSUE REWARD
+             ========================================== -->
+        <section id="tab-issue" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>🎁 Trao thưởng Token cho Sinh viên</h2>
+                        <span>Giao dịch được ký trực tiếp bởi ví Admin và ghi nhận trên Smart Contract</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <form id="issueRewardForm" onsubmit="handleIssueReward(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="issueStudentSelect">Chọn Sinh viên nhận thưởng *</label>
+                                <select id="issueStudentSelect" class="form-control" onchange="onStudentSelectChange()" required>
+                                    <option value="">-- Đang tải danh sách sinh viên --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="issueAmount">Số lượng ICTU Token *</label>
+                                <input type="number" id="issueAmount" class="form-control" placeholder="VD: 50, 100, 500" min="1" step="1" required>
+                            </div>
+
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="issueReason">Lý do / Danh mục Khen thưởng *</label>
+                                <input type="text" id="issueReason" class="form-control" placeholder="VD: Giải Nhất NCKH Cấp Khoa, Sinh viên Xuất sắc Học kỳ I..." required>
+                            </div>
+                        </div>
+
+                        <!-- Preview Student Wallet & Current Balance -->
+                        <div id="studentWalletPreview" style="display: none; background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                <div>
+                                    <span style="font-size: 0.85rem; color: var(--text-muted);">Địa chỉ ví Ethereum sinh viên:</span>
+                                    <div class="mono" id="previewWallet" style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">--</div>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.85rem; color: var(--text-muted);">Số dư hiện tại trên Blockchain:</span>
+                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);" id="previewBalance">0 ICTU</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <button type="submit" id="btnIssueSubmit" class="btn btn-primary" style="padding: 0.85rem 1.75rem;">
+                                🚀 Xác nhận & Ký giao dịch Trao thưởng
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetIssueForm()">
+                                🔄 Đặt lại
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Balance Checker -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>💰 Tra cứu số dư ví bất kỳ</h2>
+                        <span>Kiểm tra trực tiếp từ hàm balanceOf() của Smart Contract ERC-20</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1; min-width: 280px;">
+                            <label for="checkWalletInput">Địa chỉ ví Ethereum (0x...)</label>
+                            <input type="text" id="checkWalletInput" class="form-control mono" placeholder="0x...">
+                        </div>
+                        <button class="btn btn-secondary" onclick="handleCheckBalanceCustom()" style="height: 48px;">
+                            🔍 Tra cứu số dư
+                        </button>
+                    </div>
+                    <div id="checkBalanceResult" style="margin-top: 1rem; display: none;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 3: STUDENTS MANAGEMENT
+             ========================================== -->
+        <section id="tab-students" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>👨‍🎓 Danh sách Sinh viên</h2>
+                        <span id="studentCountBadge">(0 sinh viên)</span>
+                    </div>
+                    <div class="panel-actions">
+                        <input type="text" id="studentSearchInput" class="input-search" placeholder="🔍 Tìm kiếm theo Tên, Mã SV, Ví..." oninput="handleStudentSearch()" style="width: 260px;">
+                        <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()">
+                            ➕ Thêm Sinh viên
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="loadStudents()">
+                            🔄 Làm mới
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Mã SV</th>
+                                <th>Họ và Tên</th>
+                                <th>Địa chỉ Ví Blockchain</th>
+                                <th>Email</th>
+                                <th>Đã nhận</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTable">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    Đang tải dữ liệu sinh viên...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 4: REWARD HISTORY
+             ========================================== -->
+        <section id="tab-history" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>📜 Lịch sử Trao thưởng Toàn hệ thống</h2>
+                        <span id="historyCountBadge">Xác thực với chữ ký & Hash giao dịch</span>
+                    </div>
+                    <div class="panel-actions">
+                        <input type="text" id="historySearchInput" class="input-search" placeholder="🔍 Tìm theo Mã SV, Tên, Lý do, Tx..." oninput="handleHistorySearch()" style="width: 280px;">
+                        <button class="btn btn-secondary btn-sm" onclick="loadHistory(1)">
+                            🔄 Làm mới
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Sinh viên</th>
+                                <th>Số Token</th>
+                                <th>Lý do trao thưởng</th>
+                                <th>Mã giao dịch (Tx Hash)</th>
+                                <th>Thời gian</th>
+                                <th>Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    Đang tải lịch sử trao thưởng...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- History Pagination -->
+                <div class="pagination" id="historyPagination" style="padding: 1.25rem 1.75rem;">
+                    <div class="pagination-info" id="historyPaginationInfo">
+                        Hiển thị 0 - 0 trong tổng số 0 bản ghi
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="page-btn" id="btnPrevPage" onclick="changeHistoryPage(-1)">◀ Trang trước</button>
+                        <span id="currentPageIndicator" style="display: inline-flex; align-items: center; padding: 0 10px; font-weight: 600; font-size: 0.85rem;">Trang 1 / 1</span>
+                        <button class="page-btn" id="btnNextPage" onclick="changeHistoryPage(1)">Trang sau ▶</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 5: LEADERBOARD
+             ========================================== -->
+        <section id="tab-leaderboard" class="tab-content">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-header-title">
+                        <h2>🏆 Bảng xếp hạng Top 10 Sinh viên Xuất sắc</h2>
+                        <span>Xếp hạng dựa trên tổng số ICTU Reward Token được tích lũy</span>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary btn-sm" onclick="loadLeaderboard()">
+                            🔄 Làm mới Bảng xếp hạng
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">Hạng</th>
+                                <th>Mã SV</th>
+                                <th>Họ và Tên</th>
+                                <th>Địa chỉ Ví</th>
+                                <th>Số lượt thưởng</th>
+                                <th>Tổng Token ICTU</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardTable">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    Đang tải bảng xếp hạng...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==========================================
+         MODAL: THÊM SINH VIÊN MỚI
+         ========================================== -->
+    <div id="addStudentModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">➕ Thêm Sinh viên Mới</h3>
+                <button class="btn-icon" onclick="closeModal('addStudentModal')">✕</button>
+            </div>
+            <form onsubmit="handleAddStudentSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="newStudentId">Mã Sinh viên *</label>
+                        <input type="text" id="newStudentId" class="form-control" placeholder="VD: DTC004" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="newName">Họ và Tên Sinh viên *</label>
+                        <input type="text" id="newName" class="form-control" placeholder="VD: Lê Thị Mai" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="newWallet">Địa chỉ ví Ethereum *</label>
+                        <input type="text" id="newWallet" class="form-control mono" placeholder="0x..." required>
+                        <small style="color: var(--text-muted); font-size: 0.78rem;">Địa chỉ ví EVM hợp lệ 42 ký tự</small>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="newEmail">Email liên hệ</label>
+                        <input type="email" id="newEmail" class="form-control" placeholder="mai@ictu.edu.vn">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">Mật khẩu khởi tạo đăng nhập</label>
+                        <input type="text" id="newPassword" class="form-control" placeholder="Mặc định: 123456">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentModal')">Hủy</button>
+                    <button type="submit" id="btnAddStudentSubmit" class="btn btn-primary">Xác nhận Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL: CHỈNH SỬA SINH VIÊN
+         ========================================== -->
+    <div id="editStudentModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">✏️ Chỉnh sửa Thông tin Sinh viên</h3>
+                <button class="btn-icon" onclick="closeModal('editStudentModal')">✕</button>
+            </div>
+            <form onsubmit="handleEditStudentSubmit(event)">
+                <input type="hidden" id="editStudentIdHidden">
+                <div class="modal-body">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label>Mã Sinh viên</label>
+                        <input type="text" id="editStudentIdDisplay" class="form-control" disabled style="opacity: 0.7;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="editName">Họ và Tên *</label>
+                        <input type="text" id="editName" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="editWallet">Địa chỉ ví Ethereum *</label>
+                        <input type="text" id="editWallet" class="form-control mono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editEmail">Email liên hệ</label>
+                        <input type="email" id="editEmail" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editStudentModal')">Hủy</button>
+                    <button type="submit" id="btnEditStudentSubmit" class="btn btn-primary">Lưu Thay Đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL: CHI TIẾT GIAO DỊCH BLOCKCHAIN
+         ========================================== -->
+    <div id="txReceiptModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">🧾 Biên lai Giao dịch Blockchain</h3>
+                <button class="btn-icon" onclick="closeModal('txReceiptModal')">✕</button>
+            </div>
+            <div class="modal-body" id="txReceiptContent">
+                <!-- Injected via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('txReceiptModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Đề tài Nghiên cứu Khoa học: <b>Ứng dụng Công nghệ Blockchain trong Quản lý & Khen thưởng Sinh viên ICTU</b></p>
+        <p style="margin-top: 4px; font-size: 0.78rem;">Trường Đại học Công nghệ Thông tin và Truyền thông - Đại học Thái Nguyên</p>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

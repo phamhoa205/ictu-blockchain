@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập | ICTU Blockchain Reward System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo-badge">🎓</div>
+            <h1>ICTU Reward System</h1>
+            <p>Hệ thống Quản lý Khen thưởng Blockchain</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="username">Tên đăng nhập / Mã SV</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="form-control" 
+                    placeholder="VD: admin hoặc hoa" 
+                    required 
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+                <label for="password">Mật khẩu</label>
+                <div style="position: relative;">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-control" 
+                        placeholder="••••••••" 
+                        required 
+                        autocomplete="current-password"
+                    >
+                    <button 
+                        type="button" 
+                        onclick="togglePassword()" 
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
+                        id="togglePwdBtn"
+                        title="Hiện/Ẩn mật khẩu"
+                    >👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                🚀 Đăng nhập hệ thống
+            </button>
+        </form>
+
+        <div class="quick-login-pills">
+            <button type="button" class="quick-login-btn" onclick="quickFill('admin', '123456')">
+                👨‍💼 Demo Admin
+            </button>
+            <button type="button" class="quick-login-btn" onclick="quickFill('hoa', '123456')">
+                🎓 SV Hoa
+            </button>
+            <button type="button" class="quick-login-btn" onclick="quickFill('nam', '123456')">
+                🎓 SV Nam
+            </button>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="login.js"></script>
+</body>
+</html>
