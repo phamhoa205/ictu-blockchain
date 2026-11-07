@@ -1,0 +1,234 @@
+ĐẠI HỌC THÁI NGUYÊN
+TRƯỜNG ĐẠI HỌC CÔNG NGHỆ
+THÔNG TIN VÀ TRUYỀN THÔNG
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập – Tự do – Hạnh phúc650875206375650875206375
+33909063503390906350
+THUYẾT MINH ĐỀ TÀI
+KHOA HỌC VÀ CÔNG NGHỆ CẤP SINH VIÊN NĂM 2026
+1.TÊN ĐỀ TÀI: Nghiên cứu về Blockchain và viết hợp đồng thông minh xây dựng hệ thống quản lý phần thưởng ảo cho ICTU
+2. MÃ SỐ:
+3. THỜI GIAN THỰC HIỆN (12 tháng)
+Từ tháng 01 năm 2026  đến 31 tháng 12 năm 2026.
+4. CHỦ NHIỆM ĐỀ TÀI
+Họ và tên
+Phạm Minh Hòa
+Lớp
+KTPM-K22C
+Mã số SV
+DTC235180075
+Khoa
+Công nghệ thông tin
+Số điện thoại
+0868214828
+Email
+Dtc235180075@ictu.edu.vn
+5. CỐ VẤN KHOA HỌC
+Họ và tên
+Nguyễn Quang Hiệp
+Khoa
+Công nghệ thông tin
+Chữ ký
+Số điện thoại
+0915122722
+Email
+nqhiep@ictu.edu.vn
+6. NHỮNG NGƯỜI THAM GIA THỰC HIỆN ĐỀ TÀI
+Stt
+Họ và tên
+Đơn vị
+Nội dung nghiên cứu
+cụ thể được giao
+Chữ ký
+1
+Nguyễn Thành Long
+KTPM K22C
+Tham gia xây dựng và kiểm thử hợp đồng thông minh.
+2
+Mậu Thị Linh Nhi
+KTPM K22C
+Thiết kế mô hình quản lý phần thưởng ảo, đề xuất quy trình tích điểm.
+3
+Trần Tuấn Vũ
+KTPM K22C
+Hỗ trợ thử nghiệm đánh giá hệ thống
+7. ĐƠN VỊ PHỐI HỢP
+Stt
+Tên đơn vị
+Nội dung phối hợp nghiên cứu
+8. TỔNG QUAN TÌNH HÌNH NGHIÊN CỨU
+8.1. Tổng quan về tình hình nghiên cứu
+Tổng quan Blockchain là công nghệ sổ cái phân tán cho phép lưu trữ dữ liệu minh bạch, không thể chỉnh sửa. Hợp đồng thông minh cho phép tự động hóa các giao dịch mà không cần bên trung gian. Trên thế giới, blockchain đã được ứng dụng trong tài chính, giáo dục và quản lý tài sản số. Tại Việt Nam, các nghiên cứu và ứng dụng blockchain trong môi trường đại học vẫn còn hạn chế, chủ yếu dừng ở mức thử nghiệm.
+8.2. Danh mục các công trình đã công bố thuộc lĩnh vực của đề tài
+Chủ nhiệm đề tài tham gia thực hiện đề tài hiện chưa có công trình khoa học công bố liên quan trực tiếp đến lĩnh vực nghiên cứu của đề tài.
+9. TÍNH CẤP THIẾT CỦA ĐỀ TÀI
+Trong bối cảnh chuyển đổi số trong giáo dục, việc ứng dụng công nghệ blockchain vào quản lý và vận hành hệ thống trong trường đại học đang là xu hướng tất yếu. Hiện nay ICTU chưa có một cơ chế minh bạch, an toàn và hiện đại để quản lý, lưu trữ và trao đổi phần thưởng ảo cho sinh viên trong các hoạt động học tập, nghiên cứu và phong trào. Blockchain và hợp đồng thông minh giúp đảm bảo tính công khai, chống gian lận, nâng cao trải nghiệm số hóa, góp phần xây dựng hệ sinh thái iCampus và hướng tới mô hình Smart Campus.
+10. MỤC TIÊU ĐỀ TÀI
+- Xây dựng hệ thống quản lý phần thưởng ảo dựa trên nền tảng blockchain đảm bảo minh bạch, an toàn và phi tập trung.
+- Ứng dụng hợp đồng thông minh (Smart Contract) để tự động hóa việc cấp phát, trao đổi và sử dụng phần thưởng.
+- Tích hợp hệ thống vào môi trường ICTU, tạo động lực cho sinh viên tham gia học tập, nghiên cứu khoa học và các hoạt động ngoại khóa.
+- Góp phần nghiên cứu, thử nghiệm và ứng dụng blockchain trong môi trường đại học, mở rộng tiềm năng cho các dự án CNTT khác.
+11. PHƯƠNG PHÁP NGHIÊN CỨU, PHẠM VI NGHIÊN CỨU
+Phương pháp nghiên cứu: Khảo sát, phân tích, thiết kế, thực thi và tổng hợp.
+Phạm vi nghiên cứu:
+- Đối tượng: Các nguồn thông tin, tài liệu hiện có của nhà trường.
+- Phạm vi thử nghiệm: Đưa vào chạy thử trong phạm vi một khoa hoặc một lớp sinh viên cụ thể.
+12. NỘI DUNG NGHIÊN CỨU VÀ TIẾN ĐỘ THỰC HIỆN
+Stt
+Các nội dung, công việc thực hiện chủ yếu
+Sản phẩm
+phải đạt
+Thời gian
+(bắt đầu-kết thúc)
+Người
+thực hiện
+1
+Xây dựng thuyết minh
+Bản thuyết minh đề tài
+Tháng 12/2025
+Phạm Minh Hòa
+2
+Nghiên cứu tổng quan blockchain và smart contract
+Báo cáo nghiên cứu tổng quan
+1/1/2026 – 1/3/2026
+Phạm Minh Hòa
+Nguyễn Thành Long
+Mậu Thị Linh Nhi
+Trần Tuấn Vũ
+3
+Thiết kế mô hình hệ thống quản lý phần thưởng ảo cho sinh viên ICTU
+Tài liệu thiết kế hệ thống, sơ đồ kiến trúc
+2/3/2026 – 1/5/2026
+Phạm Minh Hòa
+Mậu Thị Linh Nhi
+4
+Xây dựng hợp đồng thông minh quản lý phần thưởng
+Smart contract mô phỏng
+2/5/2026 – 1/7/2026
+Phạm Minh Hòa
+Nguyễn Thành Long
+5
+Phát triển chương trình mô phỏng hệ thống
+Chương trình mô phỏng
+2/7/2026 – 1/10/2026
+Phạm Minh Hòa
+Nguyễn Thành Long
+Mậu Thị Linh Nhi
+6
+Thử nghiệm, đánh giá và hoàn thiện đề tài
+Báo cáo đánh giá kết quả thử nghiệm
+2/10/2026 – 1/11/2026
+Phạm Minh Hòa
+Trần Tuấn Vũ
+7
+Viết báo cáo tổng kết đề tài
+Báo cáo tổng kết
+1/11/2026 – 31/12/2026
+Phạm Minh Hòa
+(Các nội dung, công việc thực hiện tại mục 11.2 phải phù hợp với các nội dung nghiên cứu đã chỉ ra ở mục 12.1)
+13. SẢN PHẨM VÀ ĐỊA CHỈ ỨNG DỤNG
+13.1. Loại sản phẩm: chương trình mô phỏng
+13.2. Tên sản phẩm, số lượng và yêu cầu khoa học đối với sản phẩm:
+STT
+Tên sản phẩm
+Số lượng
+Yêu cầu khoa học
+1
+Báo cáo tổng kết
+1
+Đầy đủ nội dung, đúng cấu trúc quy định
+2
+Chương trình mô phỏng
+1
+Hệ thống mô phỏng quản lý phần thưởng ảo sử dụng hợp đồng thông minh, đảm bảo tính minh bạch, tự động, an toàn; giao diện trực quan, dễ sử dụng và hoạt động ổn định trong môi trường thử nghiệm.
+Chú ý: Báo cáo đề tài KHÔNG gọi là sản phẩm mà là báo cáo tóm tắt quá trình triển khai đề tài.
+13.3. Địa chỉ có thể ứng dụng (tên địa phương, đơn vị ứng dụng):  (Những đề tài có sản phẩm ứng dụng mới đưa vào mục này).
+14. KINH PHÍ THỰC HIỆN ĐỀ TÀI VÀ NGUỒN KINH PHÍ
+Tổng kinh phí:    4.000.000
+Dự trù kinh phí theo các mục chi:
+(Đơn vị tính: đồng)
+STT
+Khoản chi, nội dung chi
+Tổng kinh phí
+Ghi chú
+1
+Chi công lao động trực tiếp
+3.280.000
+2
+Chi mua thiết bị, dụng cụ, nguyên liệu
+0
+3
+In ấn, phô tô đóng quyển báo cáo
+20.000
+4
+Nghiệm thu đề tài
+500.000
+5
+Chi phí quản lý chung đề tài KH&CN (5%)
+200.000
+Tổng cộng:
+(Dựa vào thông tin trong dự toán chi tiết của đề tài)
+4159420003Ngày       tháng       năm 20....CHỦ NHIỆM ĐỀ TÀI415942000314620881476058 Ngày       tháng       năm 20.....  HIỆU TRƯỞNG  14620881476058303307820003Ngày       tháng       năm 20....   PHÒNG KH-CN&HTQT  303307820003
+Ngày       tháng       năm 20....
+CHỦ NHIỆM ĐỀ TÀI
+Ngày       tháng       năm 20.....
+HIỆU TRƯỞNG
+Ngày       tháng       năm 20....
+PHÒNG KH-CN&HTQT
+TRƯỜNG ĐẠI HỌC CÔNG NGHỆ
+THÔNG TIN VÀ TRUYỀN THÔNG
+KHOA CÔNG NGHỆ THÔNG TIN
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập – Tự do – Hạnh phúc
+60134588906013458890
+46672512704667251270
+THÔNG TIN VỀ SINH VIÊN
+CHỊU TRÁCH NHIỆM CHÍNH THỰC HIỆN ĐỀ TÀI
+I. SƠ LƯỢC VỀ SINH VIÊN: 4657725171450Ảnh 4x64657725171450
+Ảnh 4x6
+Họ và tên: Phạm Minh Hòa
+Sinh ngày: 25/11/2005
+Nơi sinh: Chũ - Lục Ngạn - Bắc Ninh
+Lớp/ Ngành : KTPM - K22C                                 Khóa: K22
+Khoa: Công nghệ thông tin
+Địa chỉ liên hệ: Chũ - Lục Ngạn - Bắc Ninh
+Điện thoại: 0868214828                     Email: dtc235180075@ictu.edu.vn
+II. QUÁ TRÌNH HỌC TẬP (kê khai thành tích của sinh viên từ năm thứ 1 đến năm đang học):
+* Năm thứ 1:
+Học kỳ 1:
+Điểm trung bình:3.40/4.0
+Xếp loại học lực:Giỏi
+Thành tích khác: Không có
+Học kỳ 2:
+Điểm trung bình: 3.88/4.0
+Xếp loại học lực: Xuất Sắc
+Thành tích khác:
+* Năm thứ 2:
+Học kỳ 1:
+Điểm trung bình: 4.0/4.0
+Xếp loại học lực: Xuất sắc
+Thành tích khác: Không có
+Học kỳ 2:
+Điểm trung bình: 4.0/4.0
+Xếp loại học lực: Xuất sắc
+Thành tích khác: Không có
+* Năm thứ 3:
+Học kỳ 1:
+Điểm trung bình:
+Xếp loại học lực:
+Thành tích khác:
+Học kỳ 2:
+Điểm trung bình:
+Xếp loại học lực:
+Thành tích khác:
+* Năm thứ 4:
+Học kỳ 1:
+Điểm trung bình:
+Xếp loại học lực:
+Thành tích khác:
+Học kỳ 2:
+Điểm trung bình:
+Xếp loại học lực:
+Thành tích khác:
+XÁC NHẬN CỦA KHOA
+SINH VIÊN CHỊU TRÁCH NHIỆM THỰC HIỆN ĐỀ TÀI

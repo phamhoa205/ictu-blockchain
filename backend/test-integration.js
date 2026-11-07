@@ -29,6 +29,7 @@ function makeRequest(method, path, body = null, token = null) {
 async function runTests() {
     console.log("==========================================");
     console.log("🧪 ICTU BLOCKCHAIN REWARD INTEGRATION TEST");
+    console.log("      (20 TOÀN DIỆN - 7 TEST SUITES)      ");
     console.log("==========================================");
 
     let passed = 0;
@@ -105,12 +106,47 @@ async function runTests() {
         const adminHistory = await makeRequest("GET", "/api/reward/history?page=1&limit=5", null, adminToken);
         assert("Admin history returns paginated data (200)", adminHistory.status === 200 && Array.isArray(adminHistory.data.data));
 
+        // 7. Teacher Portal & Proposal Workflow (5 New Test Cases)
+        console.log("\n[Test Suite 7] Teacher Portal & Proposal Workflow");
+        
+        // 16. Teacher Authentication
+        const teacherLogin = await makeRequest("POST", "/api/auth/login", { username: "nvthanh@ictu.edu.vn", password: "123456" });
+        assert("Teacher login success with @ictu.edu.vn (200)", teacherLogin.status === 200 && teacherLogin.data.role === "TEACHER");
+        const teacherToken = teacherLogin.data.token;
+
+        // 17. Teacher creates Proposal
+        const createProp = await makeRequest("POST", "/api/reward/proposals", {
+            studentId: "DTC235180075",
+            amount: 50,
+            reason: "Nghiên cứu khoa học sinh viên đạt giải Nhất ICTU 2026"
+        }, teacherToken);
+        assert("Teacher can create reward proposal (201)", createProp.status === 201 && createProp.data.proposalId !== undefined);
+        const createdProposalId = createProp.data ? createProp.data.proposalId : 1;
+
+        // 18. Teacher views own proposals
+        const teacherProps = await makeRequest("GET", "/api/reward/proposals", null, teacherToken);
+        assert("Teacher can view proposals list (200)", teacherProps.status === 200 && Array.isArray(teacherProps.data) && teacherProps.data.length > 0);
+
+        // 19. Student blocked from creating proposals
+        const studentCreateProp = await makeRequest("POST", "/api/reward/proposals", {
+            studentId: "DTC235180075",
+            amount: 100,
+            reason: "Tự đề xuất bản thân"
+        }, studentToken);
+        assert("Student cannot create reward proposal (403)", studentCreateProp.status === 403);
+
+        // 20. Admin rejects proposal
+        const rejectProp = await makeRequest("POST", `/api/reward/proposals/${createdProposalId}/reject`, {
+            rejectReason: "Cần bổ sung quyết định minh chứng cấp Khoa"
+        }, adminToken);
+        assert("Admin can reject proposal with reason (200)", rejectProp.status === 200 && rejectProp.data.success === true);
+
         console.log("\n==========================================");
         console.log(`TEST SUMMARY: ${passed} PASSED | ${failed} FAILED`);
         console.log("==========================================");
 
         if (failed === 0) {
-            console.log("🎉 ALL INTEGRATION TESTS PASSED!");
+            console.log("🎉 ALL 20 INTEGRATION TESTS PASSED!");
             process.exit(0);
         } else {
             console.error("❌ Some tests failed.");

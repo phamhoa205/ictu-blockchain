@@ -1,0 +1,120 @@
+{
+  "generatedAt": "2026-10-28T13:36:27.275Z",
+  "environment": {
+    "client": "HardhatNetwork/3.11.1/@nomicfoundation/edr/0.3.8",
+    "chainId": "31337",
+    "blockGasLimit": "60000000",
+    "solc": "0.8.28",
+    "optimizer": false
+  },
+  "methodology": {
+    "rewardAmount": "10",
+    "baselineReason": "Khen thuong HK1 2026",
+    "batchSizes": [
+      1,
+      10,
+      25,
+      50,
+      100
+    ],
+    "reasonLengths": [
+      20,
+      100,
+      500
+    ],
+    "snapshotRestoreBetweenRuns": true,
+    "warmupBeforeSnapshot": true
+  },
+  "experiment1": [
+    {
+      "n": 1,
+      "baselineGas": "69147",
+      "baselineTxCount": 1,
+      "baselineTimeMs": 4.7,
+      "batchGas": "140428",
+      "batchTimeMs": 7.91,
+      "savedGas": "-71281",
+      "savedPercent": "-103.09",
+      "baselineGasPerStudent": "69147",
+      "batchGasPerStudent": "140428"
+    },
+    {
+      "n": 10,
+      "baselineGas": "691446",
+      "baselineTxCount": 10,
+      "baselineTimeMs": 70.52,
+      "batchGas": "407150",
+      "batchTimeMs": 13.03,
+      "savedGas": "284296",
+      "savedPercent": "41.12",
+      "baselineGasPerStudent": "69144",
+      "batchGasPerStudent": "40715"
+    },
+    {
+      "n": 25,
+      "baselineGas": "1728615",
+      "baselineTxCount": 25,
+      "baselineTimeMs": 91.58,
+      "batchGas": "851674",
+      "batchTimeMs": 41.27,
+      "savedGas": "876941",
+      "savedPercent": "50.73",
+      "baselineGasPerStudent": "69144",
+      "batchGasPerStudent": "34066"
+    },
+    {
+      "n": 50,
+      "baselineGas": "3457326",
+      "baselineTxCount": 50,
+      "baselineTimeMs": 130.55,
+      "batchGas": "1592640",
+      "batchTimeMs": 85.29,
+      "savedGas": "1864686",
+      "savedPercent": "53.93",
+      "baselineGasPerStudent": "69146",
+      "batchGasPerStudent": "31852"
+    },
+    {
+      "n": 100,
+      "baselineGas": "6914532",
+      "baselineTxCount": 100,
+      "baselineTimeMs": 215.57,
+      "batchGas": "3074396",
+      "batchTimeMs": 212.08,
+      "savedGas": "3840136",
+      "savedPercent": "55.54",
+      "baselineGasPerStudent": "69145",
+      "batchGasPerStudent": "30743"
+    }
+  ],
+  "experiment2": [
+    {
+      "length": 20,
+      "bytes": 20,
+      "stringGas": "69147",
+      "hashGas": "67817",
+      "savedGas": "1330",
+      "savedPercent": "1.92"
+    },
+    {
+      "length": 100,
+      "bytes": 100,
+      "stringGas": "71295",
+      "hashGas": "67829",
+      "savedGas": "3466",
+      "savedPercent": "4.86"
+    },
+    {
+      "length": 500,
+      "bytes": 500,
+      "stringGas": "80862",
+      "hashGas": "67841",
+      "savedGas": "13021",
+      "savedPercent": "16.10"
+    }
+  ],
+  "marginalCost": {
+    "stringGasPerByte": 24.4063,
+    "hashGasPerByte": 0.05
+  }
+}

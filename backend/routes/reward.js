@@ -11,7 +11,7 @@ const {
     checkConnection
 } = require("../services/blockchain");
 
-const { verifyToken, isAdmin, isStudent } = require("../middleware/auth");
+const { verifyToken, isAdmin, isTeacher, isTeacherOrAdmin, isStudent } = require("../middleware/auth");
 
 // =====================================
 // Issue Reward
@@ -37,9 +37,9 @@ router.post("/issue", verifyToken, isAdmin, async (req, res) => {
         const cleanId = String(studentId).trim();
         const cleanReason = reason ? String(reason).trim() : "Academic Reward";
 
-        // Lookup student in SQLite
+        // Lookup student in SQLite (case-insensitive)
         db.get(
-            `SELECT * FROM students WHERE studentId = ? OR LOWER(wallet) = LOWER(?)`,
+            `SELECT * FROM students WHERE LOWER(studentId) = LOWER(?) OR LOWER(wallet) = LOWER(?)`,
             [cleanId, cleanId],
             async (err, student) => {
                 if (err) {
@@ -61,9 +61,11 @@ router.post("/issue", verifyToken, isAdmin, async (req, res) => {
                 }
 
                 try {
+                    const targetWallet = ethers.getAddress(student.wallet.trim().toLowerCase());
+
                     // Send transaction to smart contract on blockchain
                     const tx = await managerContract.issueReward(
-                        student.wallet,
+                        targetWallet,
                         numAmount,
                         cleanReason
                     );
@@ -168,11 +170,12 @@ router.get("/my-balance", verifyToken, isStudent, async (req, res) => {
                 }
 
                 try {
-                    const balance = await tokenContract.balanceOf(student.wallet);
+                    const targetWallet = ethers.getAddress(student.wallet.trim().toLowerCase());
+                    const balance = await tokenContract.balanceOf(targetWallet);
                     res.json({
                         studentId,
                         name: student.name,
-                        wallet: student.wallet,
+                        wallet: targetWallet,
                         balance: balance.toString()
                     });
                 } catch (bcErr) {
@@ -370,6 +373,228 @@ router.get("/status", async (req, res) => {
             managerAddress: rewardManagerAddress
         }
     });
+});
+
+// =====================================
+// Create Reward Proposal
+// TEACHER OR ADMIN
+// =====================================
+router.post("/proposals", verifyToken, isTeacherOrAdmin, (req, res) => {
+    const { studentId, amount, reason } = req.body;
+
+    if (!studentId || amount === undefined || amount === null || !reason) {
+        return res.status(400).json({
+            error: "Vui lòng nhập đầy đủ: Mã sinh viên, số lượng token và lý do khen thưởng"
+        });
+    }
+
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0 || !Number.isInteger(numAmount)) {
+        return res.status(400).json({
+            error: "Số lượng token phải là số nguyên dương lớn hơn 0"
+        });
+    }
+
+    const cleanId = String(studentId).trim();
+    const cleanReason = String(reason).trim();
+
+    // Lookup student
+    db.get(
+        `SELECT * FROM students WHERE LOWER(studentId) = LOWER(?) OR LOWER(wallet) = LOWER(?)`,
+        [cleanId, cleanId],
+        (err, student) => {
+            if (err) {
+                return res.status(500).json({ error: "Lỗi cơ sở dữ liệu: " + err.message });
+            }
+            if (!student) {
+                return res.status(404).json({ error: `Không tìm thấy sinh viên với mã: '${cleanId}'` });
+            }
+
+            const teacherUsername = req.user.username;
+            const teacherName = req.user.name || req.user.username;
+
+            let cleanWallet = student.wallet;
+            try {
+                cleanWallet = ethers.getAddress(student.wallet.trim().toLowerCase());
+            } catch (e) {
+                cleanWallet = student.wallet;
+            }
+
+            db.run(
+                `INSERT INTO proposals (teacherUsername, teacherName, studentId, studentName, studentWallet, amount, reason, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
+                [teacherUsername, teacherName, student.studentId, student.name, cleanWallet, numAmount, cleanReason],
+                function (insErr) {
+                    if (insErr) {
+                        return res.status(500).json({ error: "Lỗi lưu đề xuất: " + insErr.message });
+                    }
+
+                    return res.status(201).json({
+                        success: true,
+                        message: "Đề xuất khen thưởng đã được gửi thành công tới Ban Quản trị phê duyệt",
+                        proposalId: this.lastID,
+                        proposal: {
+                            id: this.lastID,
+                            teacherName,
+                            studentId: student.studentId,
+                            studentName: student.name,
+                            studentWallet: cleanWallet,
+                            amount: numAmount,
+                            reason: cleanReason,
+                            status: "PENDING"
+                        }
+                    });
+                }
+            );
+        }
+    );
+});
+
+// =====================================
+// Get Proposals List
+// ADMIN sees all proposals, TEACHER sees own proposals
+// =====================================
+router.get("/proposals", verifyToken, isTeacherOrAdmin, (req, res) => {
+    let sql = `SELECT * FROM proposals`;
+    let params = [];
+
+    if (req.user.role === "TEACHER") {
+        sql += ` WHERE LOWER(teacherUsername) = LOWER(?)`;
+        params.push(req.user.username);
+    }
+
+    sql += ` ORDER BY id DESC`;
+
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: "Lỗi truy vấn đề xuất: " + err.message });
+        }
+        res.json(rows);
+    });
+});
+
+// =====================================
+// Approve Proposal & Issue on Blockchain
+// ADMIN ONLY
+// =====================================
+router.post("/proposals/:id/approve", verifyToken, isAdmin, async (req, res) => {
+    const proposalId = req.params.id;
+
+    db.get(
+        `SELECT * FROM proposals WHERE id = ?`,
+        [proposalId],
+        async (err, proposal) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            if (!proposal) {
+                return res.status(404).json({ error: "Không tìm thấy đề xuất khen thưởng này" });
+            }
+            if (proposal.status !== "PENDING") {
+                return res.status(400).json({
+                    error: `Đề xuất này đã được xử lý (Trạng thái hiện tại: ${proposal.status})`
+                });
+            }
+
+            try {
+                // Ensure proper EIP-55 checksum on target wallet
+                const targetWallet = ethers.getAddress(proposal.studentWallet.trim().toLowerCase());
+
+                // Call Smart Contract on Blockchain
+                const tx = await managerContract.issueReward(
+                    targetWallet,
+                    proposal.amount,
+                    proposal.reason
+                );
+
+                const receipt = await tx.wait();
+
+                // Save to rewards table
+                db.run(
+                    `INSERT INTO rewards (student, amount, reason, transactionHash) VALUES (?, ?, ?, ?)`,
+                    [targetWallet, proposal.amount, proposal.reason, tx.hash],
+                    function (insertRewardErr) {
+                        if (insertRewardErr) {
+                            console.error("Warning insert reward:", insertRewardErr.message);
+                        }
+
+                        // Update proposal status
+                        db.run(
+                            `UPDATE proposals SET status = 'APPROVED', transactionHash = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+                            [tx.hash, proposalId],
+                            function (upErr) {
+                                if (upErr) {
+                                    console.error("Warning update proposal:", upErr.message);
+                                }
+
+                                return res.json({
+                                    success: true,
+                                    message: "Phê duyệt thành công và đã ghi nhận khen thưởng lên Blockchain!",
+                                    proposalId: Number(proposalId),
+                                    transactionHash: tx.hash,
+                                    blockNumber: receipt.blockNumber,
+                                    gasUsed: receipt.gasUsed.toString(),
+                                    student: proposal.studentName,
+                                    studentId: proposal.studentId,
+                                    amount: proposal.amount
+                                });
+                            }
+                        );
+                    }
+                );
+            } catch (bcError) {
+                console.error("Blockchain error on approval:", bcError);
+                return res.status(500).json({
+                    error: "Lỗi thực thi Smart Contract: " + (bcError.reason || bcError.message)
+                });
+            }
+        }
+    );
+});
+
+// =====================================
+// Reject Proposal
+// ADMIN ONLY
+// =====================================
+router.post("/proposals/:id/reject", verifyToken, isAdmin, (req, res) => {
+    const proposalId = req.params.id;
+    const { rejectReason } = req.body;
+
+    const reason = rejectReason ? String(rejectReason).trim() : "Chưa đạt tiêu chuẩn xét thưởng";
+
+    db.get(
+        `SELECT * FROM proposals WHERE id = ?`,
+        [proposalId],
+        (err, proposal) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            if (!proposal) {
+                return res.status(404).json({ error: "Không tìm thấy đề xuất" });
+            }
+            if (proposal.status !== "PENDING") {
+                return res.status(400).json({
+                    error: `Đề xuất đã được xử lý từ trước (${proposal.status})`
+                });
+            }
+
+            db.run(
+                `UPDATE proposals SET status = 'REJECTED', rejectReason = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+                [reason, proposalId],
+                function (upErr) {
+                    if (upErr) {
+                        return res.status(500).json({ error: upErr.message });
+                    }
+                    return res.json({
+                        success: true,
+                        message: "Đã từ chối đề xuất khen thưởng",
+                        proposalId: Number(proposalId),
+                        rejectReason: reason
+                    });
+                }
+            );
+        }
+    );
 });
 
 module.exports = router;

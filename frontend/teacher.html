@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Giảng viên | ICTU Blockchain Reward System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==========================================
+         Top Navigation Bar
+         ========================================== -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-logo">👨‍🏫</div>
+                <div class="brand-text">
+                    <h1>Cổng Thông tin Giảng viên</h1>
+                    <span>Trường Đại học Công nghệ Thông tin và Truyền thông (ICTU)</span>
+                </div>
+            </div>
+
+            <div class="nav-status">
+                <span class="status-dot"></span>
+                <span>Mạng Blockchain: Sẵn sàng</span>
+            </div>
+
+            <div class="nav-user">
+                <div class="user-badge">
+                    <div class="user-avatar" id="teacherAvatar" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">GV</div>
+                    <div class="user-info">
+                        <span class="user-name" id="teacherNameDisplay">Giảng viên</span>
+                        <span class="user-role-tag" style="background: #e0f2fe; color: #0284c7;">GIẢNG VIÊN</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="logout()">
+                    🚪 Đăng xuất
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================
+         Main Wrapper
+         ========================================== -->
+    <main class="main-wrapper">
+
+        <!-- Top Overview Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card card-students">
+                <div class="metric-icon">👥</div>
+                <div class="metric-details">
+                    <div class="metric-title">Tổng Sinh viên Hệ thống</div>
+                    <div class="metric-value" id="metricTotalStudents">--</div>
+                    <div class="metric-sub">Sinh viên trong cơ sở dữ liệu</div>
+                </div>
+            </div>
+
+            <div class="metric-card card-rewards">
+                <div class="metric-icon">⏳</div>
+                <div class="metric-details">
+                    <div class="metric-title">Đề xuất Chờ phê duyệt</div>
+                    <div class="metric-value" id="metricPendingProposals" style="color: var(--warning);">0</div>
+                    <div class="metric-sub">Đang chờ Ban Quản trị ký duyệt</div>
+                </div>
+            </div>
+
+            <div class="metric-card card-tokens">
+                <div class="metric-icon">✅</div>
+                <div class="metric-details">
+                    <div class="metric-title">Đề xuất Đã ghi nhận On-Chain</div>
+                    <div class="metric-value" id="metricApprovedProposals" style="color: var(--success);">0</div>
+                    <div class="metric-sub">Đã phát hành token thành công</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form: Lập đề xuất khen thưởng -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-header-title">
+                    <h2>📝 Lập Đề Xuất Khen Thưởng Sinh Viên</h2>
+                    <span>Giảng viên lập đề xuất khen thưởng học thuật, NCKH để gửi Ban Quản trị phê duyệt và ký Smart Contract</span>
+                </div>
+            </div>
+            <div class="panel-body">
+                <form id="proposalForm" onsubmit="handleProposalSubmit(event)">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                        <div class="form-group">
+                            <label for="proposalStudentSelect">Chọn Sinh viên nhận thưởng *</label>
+                            <select id="proposalStudentSelect" class="form-control" onchange="handleStudentSelectChange()" required>
+                                <option value="">-- Đang tải danh sách sinh viên --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="proposalAmount">Số Token khen thưởng (ICTU) *</label>
+                            <input 
+                                type="number" 
+                                id="proposalAmount" 
+                                class="form-control" 
+                                placeholder="VD: 50, 100, 200" 
+                                min="1" 
+                                step="1" 
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Selected Student Quick Preview -->
+                    <div id="selectedStudentPreview" style="display: none; margin-top: 1rem; padding: 12px 16px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.88rem;">
+                            <div>Họ tên: <strong id="previewStudentName">--</strong></div>
+                            <div>Mã SV: <strong id="previewStudentId">--</strong></div>
+                            <div>Ví nhận thưởng: <span class="mono" id="previewStudentWallet" style="color: var(--primary);">--</span></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.25rem;">
+                        <label for="proposalReason">Lý do & Thành tích khen thưởng *</label>
+                        <input 
+                            type="text" 
+                            id="proposalReason" 
+                            class="form-control" 
+                            placeholder="VD: Đạt Giải Nhất Nghiên cứu khoa học sinh viên cấp Khoa CNTT năm học 2025-2026" 
+                            required
+                        >
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button type="submit" id="submitProposalBtn" class="btn btn-primary" style="padding: 0.75rem 1.75rem;">
+                            🚀 Gửi Đề Xuất Phê Duyệt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Proposals List Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-header-title">
+                    <h2>📋 Danh Sách Đề Xuất Của Tôi</h2>
+                    <span>Theo dõi trạng thái xét duyệt và biên lai giao dịch Blockchain của các đề xuất</span>
+                </div>
+                <div class="panel-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="loadMyProposals()">
+                        🔄 Làm mới danh sách
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Mã SV</th>
+                            <th>Họ và tên</th>
+                            <th>Số Token</th>
+                            <th>Lý do đề xuất</th>
+                            <th>Trạng thái duyệt</th>
+                            <th>Mã Tx Blockchain</th>
+                            <th>Thời gian gửi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposalsTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                Đang tải danh sách đề xuất...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Hệ thống Khen thưởng Blockchain Sinh viên ICTU • Đại học Thái Nguyên</p>
+    </footer>
+
+    <script src="auth.js"></script>
+    <script src="teacher.js"></script>
+</body>
+</html>

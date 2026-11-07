@@ -4,8 +4,8 @@
 
 const studentUser = checkStudent();
 
-const REWARD_API = "http://localhost:3000/api/reward";
-const STUDENT_API = "http://localhost:3000/api/student";
+const REWARD_API = `${API_BASE}/reward`;
+const STUDENT_API = `${API_BASE}/student`;
 
 let currentStudentProfile = null;
 let currentRewardsList = [];
@@ -230,6 +230,67 @@ function viewReceipt(item) {
     `;
 
     openModal("txReceiptModal");
+}
+
+// ==========================================
+// Change Password Modal & Logic
+// ==========================================
+function openChangePasswordModal() {
+    const oldP = document.getElementById("oldPassword");
+    const newP = document.getElementById("newPassword");
+    const confP = document.getElementById("confirmPassword");
+    if (oldP) oldP.value = "";
+    if (newP) newP.value = "";
+    if (confP) confP.value = "";
+    openModal("changePasswordModal");
+}
+
+async function handleChangePasswordSubmit(event) {
+    event.preventDefault();
+    const oldPassword = document.getElementById("oldPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const saveBtn = document.getElementById("savePasswordBtn");
+
+    if (newPassword !== confirmPassword) {
+        showToast("Mật khẩu mới và xác nhận mật khẩu không trùng khớp!", "warning");
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        showToast("Mật khẩu mới phải có tối thiểu 6 ký tự!", "warning");
+        return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = "⏳ Đang cập nhật...";
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/change-password`, {
+            method: "POST",
+            headers: authHeader(),
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.error || "Đổi mật khẩu thất bại", "error");
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = "💾 Lưu mật khẩu";
+            return;
+        }
+
+        showToast("🎉 Đổi mật khẩu thành công! Vui lòng ghi nhớ mật khẩu mới.", "success");
+        closeModal("changePasswordModal");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "💾 Lưu mật khẩu";
+    } catch (err) {
+        console.error("Change password error:", err);
+        showToast("Lỗi kết nối máy chủ", "error");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = "💾 Lưu mật khẩu";
+    }
 }
 
 // Start student app

@@ -39,7 +39,7 @@ async function main() {
 
     // 4. Save deployed configuration
     const deploymentData = {
-        network: network.name || "localhost",
+        network: "localhost",
         deployedAt: new Date().toISOString(),
         deployer: deployer.address,
         contracts: {
@@ -48,12 +48,12 @@ async function main() {
         }
     };
 
-    const outPath = path.join(__dirname, "..", "deployed-contracts.json");
+    const outPath = path.join(process.cwd(), "deployed-contracts.json");
     fs.writeFileSync(outPath, JSON.stringify(deploymentData, null, 2));
     console.log(`\n📄 Deployment info saved to: ${outPath}`);
 
     // Update backend .env if it exists
-    const backendEnvPath = path.join(__dirname, "..", "backend", ".env");
+    const backendEnvPath = path.join(process.cwd(), "backend", ".env");
     if (fs.existsSync(backendEnvPath)) {
         let envContent = fs.readFileSync(backendEnvPath, "utf-8");
         envContent = envContent.replace(

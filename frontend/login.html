@@ -12,59 +12,153 @@
         <div class="login-header">
             <div class="logo-badge">🎓</div>
             <h1>ICTU Reward System</h1>
-            <p>Hệ thống Quản lý Khen thưởng Blockchain</p>
+            <p>Hệ thống Khen thưởng Sinh viên trên Blockchain</p>
         </div>
 
-        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-            <div class="form-group" style="margin-bottom: 1.25rem;">
-                <label for="username">Tên đăng nhập / Mã SV</label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    class="form-control" 
-                    placeholder="VD: admin hoặc hoa" 
-                    required 
-                    autocomplete="username"
-                >
+        <!-- 2 Tab Đăng nhập: Cán bộ/Giảng viên vs Sinh viên -->
+        <div class="login-tabs">
+            <button type="button" class="login-tab-btn active" id="tabTeacherBtn" onclick="switchLoginTab('TEACHER')">
+                👨‍🏫 Cán bộ / Giảng viên
+            </button>
+            <button type="button" class="login-tab-btn" id="tabStudentBtn" onclick="switchLoginTab('STUDENT')">
+                🎓 Sinh viên
+            </button>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- TAB 1: CÁN BỘ / GIẢNG VIÊN (FORM EMAIL @ictu.edu.vn) -->
+        <!-- ==================================================== -->
+        <div id="teacherSection">
+            <div class="login-role-badge">
+                <strong>👨‍🏫 Cán bộ / Giảng viên:</strong> Đăng nhập bằng Email trường có đuôi <strong>@ictu.edu.vn</strong> (hoặc tài khoản quản trị).
             </div>
 
-            <div class="form-group" style="margin-bottom: 1.75rem;">
-                <label for="password">Mật khẩu</label>
-                <div style="position: relative;">
+            <form onsubmit="handleTeacherLoginSubmit(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="teacherEmailInput">Email trường (@ictu.edu.vn)</label>
                     <input 
-                        type="password" 
-                        id="password" 
+                        type="text" 
+                        id="teacherEmailInput" 
                         class="form-control" 
-                        placeholder="••••••••" 
+                        placeholder="VD: nvthanh@ictu.edu.vn hoặc admin" 
                         required 
-                        autocomplete="current-password"
+                        autocomplete="username"
                     >
-                    <button 
-                        type="button" 
-                        onclick="togglePassword()" 
-                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
-                        id="togglePwdBtn"
-                        title="Hiện/Ẩn mật khẩu"
-                    >👁️</button>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                        💡 Định dạng: <code>tennguoidung@ictu.edu.vn</code> (hoặc <code>admin</code> cho Ban Quản trị).
+                    </div>
                 </div>
+
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="teacherPasswordInput">Mật khẩu</label>
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="teacherPasswordInput" 
+                            class="form-control" 
+                            placeholder="••••••••" 
+                            required 
+                            autocomplete="current-password"
+                        >
+                        <button 
+                            type="button" 
+                            onclick="togglePassword('teacherPasswordInput', 'toggleTeacherPwdBtn')" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
+                            id="toggleTeacherPwdBtn"
+                            title="Hiện/Ẩn mật khẩu"
+                        >👁️</button>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+                        🔑 Mật khẩu mặc định: <strong>123456</strong>
+                    </div>
+                </div>
+
+                <button type="submit" id="teacherSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700;">
+                    🚀 Đăng nhập Giảng viên / Quản trị
+                </button>
+            </form>
+
+            <!-- Gợi ý tài khoản demo Cán bộ / Giảng viên -->
+            <div class="quick-login-pills">
+                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('nvthanh@ictu.edu.vn', '123456')">
+                    👨‍🏫 TS. Nguyễn Văn Thành (nvthanh@ictu.edu.vn)
+                </button>
+                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('ptthao@ictu.edu.vn', '123456')">
+                    👩‍🏫 ThS. Phan Thị Thảo (ptthao@ictu.edu.vn)
+                </button>
+                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('admin', '123456')">
+                    👨‍💼 Ban Quản trị (admin)
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- TAB 2: SINH VIÊN (FORM MÃ DTCxxxxxxxxx) -->
+        <!-- ==================================================== -->
+        <div id="studentSection" style="display: none;">
+            <div class="login-role-badge">
+                <strong>🎓 Cổng Sinh viên:</strong> Đăng nhập bằng Mã sinh viên DTCxxx để tra cứu khen thưởng và số dư Blockchain Token ICTU.
             </div>
 
-            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
-                🚀 Đăng nhập hệ thống
-            </button>
-        </form>
+            <form onsubmit="handleStudentLoginSubmit(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label for="studentIdInput">Mã Sinh viên</label>
+                    <input 
+                        type="text" 
+                        id="studentIdInput" 
+                        class="form-control" 
+                        placeholder="VD: dtc235180075" 
+                        required 
+                        autocomplete="username"
+                    >
+                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
+                        💡 Hỗ trợ chữ thường hoặc hoa: <code>dtc235180075</code> hoặc <code>DTC235180075</code>.
+                    </div>
+                </div>
 
-        <div class="quick-login-pills">
-            <button type="button" class="quick-login-btn" onclick="quickFill('admin', '123456')">
-                👨‍💼 Demo Admin
-            </button>
-            <button type="button" class="quick-login-btn" onclick="quickFill('hoa', '123456')">
-                🎓 SV Hoa
-            </button>
-            <button type="button" class="quick-login-btn" onclick="quickFill('nam', '123456')">
-                🎓 SV Nam
-            </button>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="studentPasswordInput">Mật khẩu</label>
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="studentPasswordInput" 
+                            class="form-control" 
+                            placeholder="••••••••" 
+                            required 
+                            autocomplete="current-password"
+                        >
+                        <button 
+                            type="button" 
+                            onclick="togglePassword('studentPasswordInput', 'toggleStudentPwdBtn')" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
+                            id="toggleStudentPwdBtn"
+                            title="Hiện/Ẩn mật khẩu"
+                        >👁️</button>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
+                        🔑 Mật khẩu mặc định: <strong>ictu@123456</strong> (có thể đổi sau khi vào hệ thống).
+                    </div>
+                </div>
+
+                <button type="submit" id="studentSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700;">
+                    🚀 Đăng nhập Sinh viên
+                </button>
+            </form>
+
+            <!-- Gợi ý tài khoản demo Sinh viên -->
+            <div class="quick-login-pills">
+                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180075', 'ictu@123456')">
+                    🎓 SV Minh Hòa (dtc235180075)
+                </button>
+                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180076', 'ictu@123456')">
+                    🎓 SV Nam (dtc235180076)
+                </button>
+                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180077', 'ictu@123456')">
+                    🎓 SV Lan (dtc235180077)
+                </button>
+            </div>
         </div>
+
     </div>
 
     <script src="auth.js"></script>

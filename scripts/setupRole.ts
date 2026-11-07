@@ -8,7 +8,7 @@ async function main() {
     let tokenAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
     let managerAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
-    const deployedPath = path.join(__dirname, "..", "deployed-contracts.json");
+    const deployedPath = path.join(process.cwd(), "deployed-contracts.json");
     if (fs.existsSync(deployedPath)) {
         try {
             const data = JSON.parse(fs.readFileSync(deployedPath, "utf-8"));

@@ -4,7 +4,7 @@ const { ethers } = require("ethers");
 const bcrypt = require("bcrypt");
 
 const db = require("../database/database");
-const { verifyToken, isAdmin, isStudent } = require("../middleware/auth");
+const { verifyToken, isAdmin, isTeacherOrAdmin, isStudent } = require("../middleware/auth");
 
 // =====================================
 // Add Student
@@ -34,14 +34,14 @@ router.post("/", verifyToken, isAdmin, (req, res) => {
 
     // Check for duplicate studentId or wallet
     db.get(
-        `SELECT studentId, wallet FROM students WHERE studentId = ? OR LOWER(wallet) = LOWER(?)`,
+        `SELECT studentId, wallet FROM students WHERE LOWER(studentId) = LOWER(?) OR LOWER(wallet) = LOWER(?)`,
         [cleanId, cleanWallet],
         (checkErr, existing) => {
             if (checkErr) {
                 return res.status(500).json({ error: checkErr.message });
             }
             if (existing) {
-                if (existing.studentId === cleanId) {
+                if (existing.studentId.toLowerCase() === cleanId.toLowerCase()) {
                     return res.status(409).json({ error: `Student ID '${cleanId}' already exists` });
                 }
                 return res.status(409).json({ error: `Wallet address is already registered to another student` });
@@ -60,13 +60,13 @@ router.post("/", verifyToken, isAdmin, (req, res) => {
 
                     // Automatically create user login account for this student
                     const username = cleanId.toLowerCase();
-                    const rawPassword = password || "123456";
+                    const rawPassword = password || "ictu@123456";
                     const salt = bcrypt.genSaltSync(10);
                     const hashedPassword = bcrypt.hashSync(rawPassword, salt);
 
                     db.run(
-                        `INSERT OR IGNORE INTO users (username, password, role, studentId) VALUES (?, ?, 'STUDENT', ?)`,
-                        [username, hashedPassword, cleanId],
+                        `INSERT OR IGNORE INTO users (username, password, role, studentId, name) VALUES (?, ?, 'STUDENT', ?, ?)`,
+                        [username, hashedPassword, cleanId, cleanName],
                         (userErr) => {
                             if (userErr) {
                                 console.error("Warning: Failed to create user login for student:", userErr.message);
@@ -81,7 +81,7 @@ router.post("/", verifyToken, isAdmin, (req, res) => {
                                     wallet: cleanWallet,
                                     email: cleanEmail,
                                     username: username,
-                                    defaultPassword: password ? "(Custom)" : "123456"
+                                    defaultPassword: password ? "(Custom)" : "ictu@123456"
                                 }
                             });
                         }
@@ -119,9 +119,9 @@ router.get("/stats", verifyToken, isAdmin, (req, res) => {
 
 // =====================================
 // Get All Students with Optional Search & Pagination
-// ADMIN ONLY
+// ADMIN & TEACHER
 // =====================================
-router.get("/", verifyToken, isAdmin, (req, res) => {
+router.get("/", verifyToken, isTeacherOrAdmin, (req, res) => {
     const search = req.query.search ? String(req.query.search).trim() : null;
     const page = Number(req.query.page);
     const limit = Number(req.query.limit);
@@ -207,9 +207,9 @@ router.get("/profile", verifyToken, isStudent, (req, res) => {
 
 // =====================================
 // Get Student By ID
-// ADMIN ONLY
+// ADMIN & TEACHER
 // =====================================
-router.get("/:studentId", verifyToken, isAdmin, (req, res) => {
+router.get("/:studentId", verifyToken, isTeacherOrAdmin, (req, res) => {
     const studentId = req.params.studentId;
 
     db.get(

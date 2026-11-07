@@ -63,6 +63,44 @@ function isAdmin(req, res, next) {
 }
 
 // ==========================
+// Check Teacher Permission
+// ==========================
+function isTeacher(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({
+            error: "Unauthorized"
+        });
+    }
+
+    if (req.user.role !== "TEACHER") {
+        return res.status(403).json({
+            error: "Access denied. Teacher privileges required."
+        });
+    }
+
+    next();
+}
+
+// ==========================
+// Check Teacher or Admin Permission
+// ==========================
+function isTeacherOrAdmin(req, res, next) {
+    if (!req.user) {
+        return res.status(401).json({
+            error: "Unauthorized"
+        });
+    }
+
+    if (req.user.role !== "ADMIN" && req.user.role !== "TEACHER") {
+        return res.status(403).json({
+            error: "Access denied. Teacher or Admin privileges required."
+        });
+    }
+
+    next();
+}
+
+// ==========================
 // Check Student Permission
 // ==========================
 function isStudent(req, res, next) {
@@ -84,6 +122,8 @@ function isStudent(req, res, next) {
 module.exports = {
     verifyToken,
     isAdmin,
+    isTeacher,
+    isTeacherOrAdmin,
     isStudent,
     SECRET
 };

@@ -2,7 +2,7 @@
 // Authentication & UI Utility Functions
 // ==========================================
 
-const API_BASE = "http://localhost:3000/api";
+const API_BASE = window.API_BASE_URL || localStorage.getItem("API_BASE_URL") || "http://localhost:3000/api";
 
 function getToken() {
     return localStorage.getItem("token");
@@ -36,7 +36,31 @@ function checkAdmin() {
     }
 
     if (user.role !== "ADMIN") {
-        showToast("Access denied: Admin role required", "error");
+        showToast("Quyền truy cập bị từ chối: Yêu cầu vai trò Admin", "error");
+        setTimeout(() => {
+            if (user.role === "TEACHER") {
+                window.location.href = "teacher.html";
+            } else {
+                window.location.href = "student.html";
+            }
+        }, 1200);
+        return null;
+    }
+
+    return user;
+}
+
+function checkTeacher() {
+    const user = getUser();
+    const token = getToken();
+
+    if (!user || !token) {
+        window.location.href = "login.html";
+        return null;
+    }
+
+    if (user.role !== "TEACHER" && user.role !== "ADMIN") {
+        showToast("Quyền truy cập bị từ chối: Yêu cầu vai trò Giảng viên", "error");
         setTimeout(() => {
             window.location.href = "student.html";
         }, 1200);
@@ -56,7 +80,11 @@ function checkStudent() {
     }
 
     if (user.role !== "STUDENT") {
-        window.location.href = "index.html";
+        if (user.role === "TEACHER") {
+            window.location.href = "teacher.html";
+        } else {
+            window.location.href = "index.html";
+        }
         return null;
     }
 

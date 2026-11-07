@@ -7,9 +7,9 @@
 const currentUser = checkAdmin();
 
 // API Endpoints
-const API = "http://localhost:3000/api/reward";
-const STUDENT_API = "http://localhost:3000/api/student";
-const STUDENT_STATS_API = "http://localhost:3000/api/student/stats";
+const API = `${API_BASE}/reward`;
+const STUDENT_API = `${API_BASE}/student`;
+const STUDENT_STATS_API = `${API_BASE}/student/stats`;
 
 // Application State
 let allStudentsList = [];
@@ -32,6 +32,7 @@ async function initApp() {
 
     await checkBlockchainHealth();
     await loadStats();
+    await loadAdminProposals();
     await loadStudents();
     await loadHistory(1);
     await loadLeaderboard();
@@ -67,6 +68,10 @@ function switchTab(tabId) {
         loadLeaderboard();
     } else if (tabId === "students") {
         loadStudents(studentSearchTerm);
+    } else if (tabId === "proposals") {
+        loadAdminProposals();
+    } else if (tabId === "whitelist") {
+        loadWhitelistTable();
     } else if (tabId === "dashboard") {
         loadStats();
     }
@@ -740,6 +745,300 @@ function showTxReceiptModal(info) {
     `;
 
     openModal("txReceiptModal");
+}
+
+// ==========================================
+// Admin Proposals Management
+// ==========================================
+let currentAdminProposals = [];
+
+async function loadAdminProposals() {
+    const tbody = document.getElementById("adminProposalsTableBody");
+    const badge = document.getElementById("pendingProposalsBadge");
+    if (!tbody) return;
+
+    try {
+        const response = await fetch(`${API}/proposals`, {
+            headers: authHeader()
+        });
+
+        if (!response.ok) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">Không thể tải danh sách đề xuất</td></tr>`;
+            return;
+        }
+
+        const proposals = await response.json();
+        currentAdminProposals = proposals;
+
+        let pendingCount = 0;
+        proposals.forEach(p => {
+            if (p.status === "PENDING") pendingCount++;
+        });
+
+        if (badge) {
+            if (pendingCount > 0) {
+                badge.textContent = pendingCount;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        }
+
+        if (proposals.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">Chưa có đề xuất khen thưởng nào từ Giảng viên.</td></tr>`;
+            return;
+        }
+
+        let html = "";
+        proposals.forEach(p => {
+            let statusBadge = "";
+            let actionButtons = "";
+
+            if (p.status === "PENDING") {
+                statusBadge = `<span class="badge" style="background: #fef3c7; color: #b45309; font-weight: 600;">⏳ Chờ duyệt</span>`;
+                actionButtons = `
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn btn-primary btn-sm" onclick="approveProposal(${p.id})" style="background: #10b981; border-color: #10b981; padding: 4px 8px; font-size: 0.8rem;">
+                            ✅ Ký Blockchain
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="rejectProposal(${p.id})" style="color: #ef4444; border-color: #fca5a5; padding: 4px 8px; font-size: 0.8rem;">
+                            ❌ Từ chối
+                        </button>
+                    </div>
+                `;
+            } else if (p.status === "APPROVED") {
+                statusBadge = `<span class="badge" style="background: #d1fae5; color: #065f46; font-weight: 600;">✅ Đã ký On-chain</span>`;
+                actionButtons = `
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span class="mono" style="color: var(--primary); font-size: 0.8rem;">${shortAddress(p.transactionHash)}</span>
+                        <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${p.transactionHash}', 'Mã Tx')">📋</button>
+                    </div>
+                `;
+            } else {
+                statusBadge = `<span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 600;">❌ Đã từ chối</span>`;
+                actionButtons = `<span style="font-size: 0.8rem; color: var(--text-muted);">${p.rejectReason || "Không đạt"}</span>`;
+            }
+
+            html += `
+                <tr>
+                    <td class="mono">#${p.id}</td>
+                    <td><strong>${p.teacherName || p.teacherUsername}</strong></td>
+                    <td><span class="mono">${p.studentId}</span></td>
+                    <td><b>${p.studentName || "--"}</b></td>
+                    <td><span class="badge badge-token">+${p.amount} ICTU</span></td>
+                    <td style="max-width: 250px;">${p.reason}</td>
+                    <td>${statusBadge}</td>
+                    <td>${actionButtons}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+
+    } catch (err) {
+        console.error("Load proposals error:", err);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">Lỗi kết nối máy chủ</td></tr>`;
+    }
+}
+
+async function approveProposal(proposalId) {
+    const proposal = currentAdminProposals.find(p => p.id === proposalId);
+    if (!proposal) return;
+
+    if (!confirm(`Xác nhận phê duyệt đề xuất khen thưởng ${proposal.amount} ICTU cho sinh viên ${proposal.studentName} (${proposal.studentId})?\n\nLệnh này sẽ thực hiện gửi giao dịch lên Smart Contract trên Blockchain.`)) {
+        return;
+    }
+
+    showToast("⏳ Đang gửi giao dịch lên Smart Contract Blockchain...", "info");
+
+    try {
+        const response = await fetch(`${API}/proposals/${proposalId}/approve`, {
+            method: "POST",
+            headers: authHeader()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.error || "Phê duyệt thất bại", "error");
+            return;
+        }
+
+        showToast("🎉 Phê duyệt thành công! Token đã được ghi nhận trên Blockchain.", "success");
+
+        // Display electronic receipt
+        displayTxReceipt({
+            title: "Biên lai Phê duyệt Đề xuất Giảng viên",
+            name: proposal.studentName,
+            studentId: proposal.studentId,
+            wallet: proposal.studentWallet,
+            amount: proposal.amount,
+            reason: proposal.reason,
+            txHash: data.transactionHash,
+            blockNumber: data.blockNumber,
+            gasUsed: data.gasUsed,
+            time: new Date().toLocaleString("vi-VN")
+        });
+
+        // Refresh all data
+        await loadAdminProposals();
+        await loadStats();
+        await loadHistory(1);
+
+    } catch (err) {
+        console.error("Approve proposal error:", err);
+        showToast("Lỗi kết nối khi gửi giao dịch Blockchain", "error");
+    }
+}
+
+async function rejectProposal(proposalId) {
+    const reason = prompt("Nhập lý do từ chối đề xuất này (tùy chọn):", "Chưa đáp ứng đủ tiêu chuẩn khen thưởng");
+    if (reason === null) return; // user cancelled
+
+    try {
+        const response = await fetch(`${API}/proposals/${proposalId}/reject`, {
+            method: "POST",
+            headers: authHeader(),
+            body: JSON.stringify({ rejectReason: reason })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.error || "Từ chối thất bại", "error");
+            return;
+        }
+
+        showToast("Đã từ chối đề xuất khen thưởng", "info");
+        await loadAdminProposals();
+
+    } catch (err) {
+        console.error("Reject proposal error:", err);
+        showToast("Lỗi máy chủ", "error");
+    }
+}
+
+// ==========================================
+// Admin Whitelist Management (SSO)
+// ==========================================
+async function loadWhitelistTable() {
+    const tbody = document.getElementById("whitelistTableBody");
+    if (!tbody) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/whitelist`);
+        const whitelist = await response.json();
+
+        if (!Array.isArray(whitelist) || whitelist.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">Chưa có tài khoản giảng viên nào trong Whitelist.</td></tr>`;
+            return;
+        }
+
+        let html = "";
+        whitelist.forEach(item => {
+            html += `
+                <tr>
+                    <td class="mono">#${item.id}</td>
+                    <td><strong>${item.name}</strong></td>
+                    <td><code class="mono" style="color: var(--primary);">${item.email}</code></td>
+                    <td>${item.department || "Khoa CNTT"}</td>
+                    <td>
+                        <span class="badge" style="background: #d1fae5; color: #065f46; font-weight: 600;">
+                            🟢 Được phép SSO
+                        </span>
+                    </td>
+                    <td style="font-size: 0.82rem; color: var(--text-muted);">${formatDate(item.createdAt)}</td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteWhitelist(${item.id}, '${item.email}')" style="color: #ef4444; border-color: #fca5a5; padding: 4px 8px; font-size: 0.8rem;">
+                            🗑️ Thu hồi
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+
+    } catch (err) {
+        console.error("Load whitelist table error:", err);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger); padding: 1.5rem;">Lỗi tải danh sách Whitelist</td></tr>`;
+    }
+}
+
+async function handleAddWhitelist(event) {
+    event.preventDefault();
+    const emailInput = document.getElementById("wlEmail");
+    const nameInput = document.getElementById("wlName");
+    const deptInput = document.getElementById("wlDept");
+    const submitBtn = document.getElementById("btnSubmitWl");
+
+    const email = emailInput.value.trim().toLowerCase();
+    const name = nameInput.value.trim();
+    const department = deptInput.value.trim();
+
+    if (!email.endsWith("@ictu.edu.vn")) {
+        showToast("Email phải có đuôi trường '@ictu.edu.vn'!", "warning");
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "⏳ Đang cấp quyền...";
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/whitelist`, {
+            method: "POST",
+            headers: authHeader(),
+            body: JSON.stringify({ email, name, department, role: "TEACHER" })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.error || "Cấp quyền thất bại", "error");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "➕ Cấp quyền";
+            return;
+        }
+
+        showToast(`🎉 ${data.message}`, "success");
+        emailInput.value = "";
+        nameInput.value = "";
+        await loadWhitelistTable();
+
+    } catch (err) {
+        console.error("Add whitelist error:", err);
+        showToast("Lỗi kết nối máy chủ", "error");
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "➕ Cấp quyền";
+    }
+}
+
+async function deleteWhitelist(id, email) {
+    if (!confirm(`Xác nhận thu hồi quyền truy cập SSO của giảng viên (${email})?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/auth/whitelist/${id}`, {
+            method: "DELETE",
+            headers: authHeader()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.error || "Thu hồi quyền thất bại", "error");
+            return;
+        }
+
+        showToast("Đã thu hồi quyền truy cập SSO", "info");
+        await loadWhitelistTable();
+
+    } catch (err) {
+        console.error("Delete whitelist error:", err);
+        showToast("Lỗi máy chủ", "error");
+    }
 }
 
 // Start application
