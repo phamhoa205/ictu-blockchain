@@ -169,3 +169,34 @@ function formatDate(dateStr) {
         return dateStr;
     }
 }
+
+// ==========================================
+// API Server Configuration Helper (for Online / Vercel demo)
+// ==========================================
+function promptConfigApiUrl() {
+    const current = localStorage.getItem("API_BASE_URL") || "http://localhost:3000/api";
+    const input = prompt(
+        "Nhập địa chỉ máy chủ Backend API (ví dụ: https://nckh-api.onrender.com/api hoặc https://xxx.loca.lt/api):\n\nĐể trống và bấm OK nếu muốn dùng lại mặc định (http://localhost:3000/api):",
+        current
+    );
+    if (input !== null) {
+        const trimmed = input.trim();
+        if (!trimmed || trimmed === "http://localhost:3000/api") {
+            localStorage.removeItem("API_BASE_URL");
+            alert("Đã đặt lại máy chủ API về mặc định: http://localhost:3000/api");
+        } else {
+            const cleanUrl = trimmed.replace(/\/+$/, "");
+            localStorage.setItem("API_BASE_URL", cleanUrl);
+            alert("Đã lưu máy chủ API mới: " + cleanUrl);
+        }
+        location.reload();
+    }
+}
+
+// Tự động hiển thị API Base trên badge nếu có phần tử #displayApiBase
+document.addEventListener("DOMContentLoaded", () => {
+    const el = document.getElementById("displayApiBase");
+    if (el) {
+        el.textContent = API_BASE;
+    }
+});

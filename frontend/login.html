@@ -159,6 +159,14 @@
             </div>
         </div>
 
+        <!-- Cấu hình Máy chủ API (Thuận tiện khi demo online qua Vercel) -->
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.78rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 0.8rem;">
+            <span>🌐 Máy chủ API: <code id="displayApiBase" style="font-size: 0.74rem; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px;"></code></span>
+            <button type="button" onclick="promptConfigApiUrl()" style="background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 0.74rem; cursor: pointer; color: var(--text-primary); margin-left: 6px;">
+                ⚙️ Đổi máy chủ
+            </button>
+        </div>
+
     </div>
 
     <script src="auth.js"></script>
