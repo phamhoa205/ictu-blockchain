@@ -3,39 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập | ICTU Blockchain Reward System</title>
+    <title>Cổng Đăng nhập | ICTU Blockchain Reward System</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Google Identity Services (GIS) Client Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="login-page">
 
     <div class="login-card">
+        
+        <!-- Header Logo ICTU -->
         <div class="login-header">
-            <div class="logo-badge">🎓</div>
-            <h1>ICTU Reward System</h1>
-            <p>Hệ thống Khen thưởng Sinh viên trên Blockchain</p>
+            <div class="ictu-brand-emblem">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="24" cy="24" r="23" fill="#ffffff" stroke="#0054a6" stroke-width="2"/>
+                    <path d="M24 8L6 18L24 28L42 18L24 8Z" fill="#0054a6"/>
+                    <path d="M12 21.5V30.5C12 34.5 17.5 38 24 38C30.5 38 36 34.5 36 30.5V21.5L24 28L12 21.5Z" fill="#e30613"/>
+                    <path d="M39 21V33" stroke="#e30613" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="39" cy="34.5" r="1.5" fill="#e30613"/>
+                </svg>
+            </div>
+            <h1 class="ictu-university-title">ĐẠI HỌC THÁI NGUYÊN</h1>
+            <h2 class="ictu-college-title">TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG</h2>
+            <div class="ictu-system-pill">HỆ THỐNG KHEN THƯỞNG BLOCKCHAIN</div>
         </div>
 
-        <!-- 2 Tab Đăng nhập: Cán bộ/Giảng viên vs Sinh viên -->
-        <div class="login-tabs">
-            <button type="button" class="login-tab-btn active" id="tabTeacherBtn" onclick="switchLoginTab('TEACHER')">
-                👨‍🏫 Cán bộ / Giảng viên
-            </button>
-            <button type="button" class="login-tab-btn" id="tabStudentBtn" onclick="switchLoginTab('STUDENT')">
-                🎓 Sinh viên
-            </button>
-        </div>
-
-        <!-- ==================================================== -->
-        <!-- TAB 1: CÁN BỘ / GIẢNG VIÊN (FORM EMAIL @ictu.edu.vn) -->
-        <!-- ==================================================== -->
-        <div id="teacherSection">
-            <div class="login-role-badge">
-                <strong>👨‍🏫 Cán bộ / Giảng viên:</strong> Đăng nhập bằng Email trường có đuôi <strong>@ictu.edu.vn</strong> (hoặc tài khoản quản trị).
+        <!-- ======================================================== -->
+        <!-- BƯỚC 1: MÀN HÌNH CHỌN ĐỐI TƯỢNG ĐĂNG NHẬP (MẶC ĐỊNH) -->
+        <!-- ======================================================== -->
+        <div id="stepRoleSelection">
+            <div class="step-title-group">
+                <h3 class="step-main-title">Đăng nhập hệ thống</h3>
+                <p class="step-sub-title">Vui lòng chọn đối tượng đăng nhập</p>
             </div>
 
+            <div class="role-cards-grid">
+                <!-- Thẻ Sinh viên -->
+                <div class="role-select-card card-student" onclick="showStep('stepStudentLogin')">
+                    <div class="role-icon-circle icon-student">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                        </svg>
+                    </div>
+                    <h4 class="role-title">Sinh viên</h4>
+                    <p class="role-desc">Đăng nhập bằng Email Google / Microsoft do Trường cấp</p>
+                </div>
+
+                <!-- Thẻ Quản trị -->
+                <div class="role-select-card card-admin" onclick="showStep('stepAdminLogin')">
+                    <div class="role-icon-circle icon-admin">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#c93b2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                    </div>
+                    <h4 class="role-title">Quản trị</h4>
+                    <p class="role-desc">Đăng nhập hệ thống quản trị & giảng viên (SSO)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- BƯỚC 2A: MÀN HÌNH ĐĂNG NHẬP SINH VIÊN (CHÍNH XÁC THEO ICTU) -->
+        <!-- ======================================================== -->
+        <div id="stepStudentLogin" style="display: none;">
+            <div class="step-title-group">
+                <h3 class="step-main-title">Đăng nhập</h3>
+                <p class="step-sub-title">Cổng thông tin Sinh viên ICTU</p>
+            </div>
+
+            <!-- Hộp hướng dẫn màu vàng kem nhạt chuẩn sinhvien.ictu.edu.vn -->
+            <div class="student-guide-box">
+                <p class="guide-lead">Sinh viên lựa chọn đăng nhập thông qua Google Email hoặc Microsoft Email do Trường cung cấp:</p>
+                <ul class="guide-list">
+                    <li>Email có cấu trúc <code>masv@ictu.edu.vn</code> đăng nhập qua <strong>Google</strong>.</li>
+                    <li>Email có cấu trúc <code>masv@ms.ictu.edu.vn</code> đăng nhập qua <strong>Microsoft</strong>.</li>
+                </ul>
+                <p class="guide-highlight-red">
+                    Sinh viên nhấn chuột vào biểu tượng Google hoặc Microsoft dưới đây để đăng nhập.
+                </p>
+            </div>
+
+            <!-- 2 Nút Đăng nhập Ngang Hàng: Google vs Microsoft -->
+            <div class="sso-buttons-row">
+                <!-- Nút Google -->
+                <button type="button" class="btn-sso btn-sso-google" onclick="triggerGoogleSignIn('STUDENT')">
+                    <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
+                    <span>Google</span>
+                </button>
+
+                <!-- Nút Microsoft -->
+                <button type="button" class="btn-sso btn-sso-ms" onclick="triggerMicrosoftSignIn('STUDENT')">
+                    <svg width="20" height="20" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#f25022" d="M1 1h10v10H1z"/>
+                        <path fill="#00a4ef" d="M1 12h10v10H1z"/>
+                        <path fill="#7fba00" d="M12 1h10v10H12z"/>
+                        <path fill="#ffb900" d="M12 12h10v10H12z"/>
+                    </svg>
+                    <span>Microsoft</span>
+                </button>
+            </div>
+
+            <!-- Tùy chọn đăng nhập bằng Mã SV & Mật khẩu (Dự phòng truyền thống) -->
+            <div class="traditional-toggle-wrap">
+                <button type="button" class="btn-toggle-link" onclick="toggleStudentPasswordForm()">
+                    <span id="pwdToggleIcon">🔐</span> <span id="pwdToggleText">Đăng nhập bằng Mã sinh viên & Mật khẩu</span>
+                </button>
+            </div>
+
+            <div id="studentPasswordForm" style="display: none; margin-top: 1rem;">
+                <form onsubmit="handleStudentLoginSubmit(event)">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="studentIdInput">Mã Sinh viên</label>
+                        <input 
+                            type="text" 
+                            id="studentIdInput" 
+                            class="form-control" 
+                            placeholder="VD: dtc235180075" 
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label for="studentPasswordInput">Mật khẩu</label>
+                        <div style="position: relative;">
+                            <input 
+                                type="password" 
+                                id="studentPasswordInput" 
+                                class="form-control" 
+                                placeholder="Mật khẩu mặc định: ictu@123456" 
+                                autocomplete="current-password"
+                            >
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('studentPasswordInput', 'toggleStudentPwdBtn')" 
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
+                                id="toggleStudentPwdBtn"
+                                title="Hiện/Ẩn mật khẩu"
+                            >👁️</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="studentSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-weight: 700;">
+                        🚀 Đăng nhập bằng Mã SV
+                    </button>
+                </form>
+
+                <!-- Quick pills demo sinh viên -->
+                <div class="quick-login-pills" style="margin-top: 1rem; padding-top: 0.8rem;">
+                    <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180077', 'ictu@123456')">
+                        🎓 SV Lan (dtc235180077)
+                    </button>
+                    <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180075', 'ictu@123456')">
+                        🎓 SV Hòa (dtc235180075)
+                    </button>
+                    <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180076', 'ictu@123456')">
+                        🎓 SV Nam (dtc235180076)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nút quay lại bước 1 -->
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button type="button" class="btn-back-step" onclick="showStep('stepRoleSelection')">
+                    ← Quay lại chọn đối tượng đăng nhập
+                </button>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- BƯỚC 2B: MÀN HÌNH ĐĂNG NHẬP QUẢN TRỊ & GIẢNG VIÊN -->
+        <!-- ======================================================== -->
+        <div id="stepAdminLogin" style="display: none;">
+            <div class="step-title-group">
+                <h3 class="step-main-title">Đăng nhập Quản trị</h3>
+                <p class="step-sub-title">Cổng xác thực Cán bộ, Giảng viên & Ban Quản trị</p>
+            </div>
+
+            <!-- Nút Google Đăng nhập Nhanh cho Giảng viên -->
+            <button type="button" class="btn-sso-full-google" onclick="triggerGoogleSignIn('TEACHER')">
+                <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                <span>Đăng nhập bằng Google (@ictu.edu.vn)</span>
+            </button>
+
+            <!-- Đường phân cách -->
+            <div class="login-divider">
+                <span>hoặc đăng nhập bằng tài khoản trường</span>
+            </div>
+
+            <!-- Form Cán bộ / Giảng viên truyền thống -->
             <form onsubmit="handleTeacherLoginSubmit(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="teacherEmailInput">Email trường (@ictu.edu.vn)</label>
+                <div class="form-group" style="margin-bottom: 1.15rem;">
+                    <label for="teacherEmailInput">Email trường hoặc Tên đăng nhập</label>
                     <input 
                         type="text" 
                         id="teacherEmailInput" 
@@ -44,19 +214,16 @@
                         required 
                         autocomplete="username"
                     >
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
-                        💡 Định dạng: <code>tennguoidung@ictu.edu.vn</code> (hoặc <code>admin</code> cho Ban Quản trị).
-                    </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.5rem;">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label for="teacherPasswordInput">Mật khẩu</label>
                     <div style="position: relative;">
                         <input 
                             type="password" 
                             id="teacherPasswordInput" 
                             class="form-control" 
-                            placeholder="••••••••" 
+                            placeholder="Mật khẩu mặc định: 123456" 
                             required 
                             autocomplete="current-password"
                         >
@@ -68,105 +235,121 @@
                             title="Hiện/Ẩn mật khẩu"
                         >👁️</button>
                     </div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
-                        🔑 Mật khẩu mặc định: <strong>123456</strong>
-                    </div>
                 </div>
 
-                <button type="submit" id="teacherSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700;">
-                    🚀 Đăng nhập Giảng viên / Quản trị
+                <button type="submit" id="teacherSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-weight: 700;">
+                    🚀 Đăng nhập Quản trị / Giảng viên
                 </button>
             </form>
 
-            <!-- Gợi ý tài khoản demo Cán bộ / Giảng viên -->
-            <div class="quick-login-pills">
-                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('nvthanh@ictu.edu.vn', '123456')">
-                    👨‍🏫 TS. Nguyễn Văn Thành (nvthanh@ictu.edu.vn)
-                </button>
-                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('ptthao@ictu.edu.vn', '123456')">
-                    👩‍🏫 ThS. Phan Thị Thảo (ptthao@ictu.edu.vn)
-                </button>
+            <!-- Gợi ý tài khoản demo Quản trị -->
+            <div class="quick-login-pills" style="margin-top: 1rem; padding-top: 0.8rem;">
                 <button type="button" class="quick-login-btn" onclick="quickFillTeacher('admin', '123456')">
                     👨‍💼 Ban Quản trị (admin)
                 </button>
-            </div>
-        </div>
-
-        <!-- ==================================================== -->
-        <!-- TAB 2: SINH VIÊN (FORM MÃ DTCxxxxxxxxx) -->
-        <!-- ==================================================== -->
-        <div id="studentSection" style="display: none;">
-            <div class="login-role-badge">
-                <strong>🎓 Cổng Sinh viên:</strong> Đăng nhập bằng Mã sinh viên DTCxxx để tra cứu khen thưởng và số dư Blockchain Token ICTU.
+                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('nvthanh@ictu.edu.vn', '123456')">
+                    👨‍🏫 TS. Nguyễn Văn Thành
+                </button>
+                <button type="button" class="quick-login-btn" onclick="quickFillTeacher('ptthao@ictu.edu.vn', '123456')">
+                    👩‍🏫 ThS. Phan Thị Thảo
+                </button>
             </div>
 
-            <form onsubmit="handleStudentLoginSubmit(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label for="studentIdInput">Mã Sinh viên</label>
-                    <input 
-                        type="text" 
-                        id="studentIdInput" 
-                        class="form-control" 
-                        placeholder="VD: dtc235180075" 
-                        required 
-                        autocomplete="username"
-                    >
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">
-                        💡 Hỗ trợ chữ thường hoặc hoa: <code>dtc235180075</code> hoặc <code>DTC235180075</code>.
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="studentPasswordInput">Mật khẩu</label>
-                    <div style="position: relative;">
-                        <input 
-                            type="password" 
-                            id="studentPasswordInput" 
-                            class="form-control" 
-                            placeholder="••••••••" 
-                            required 
-                            autocomplete="current-password"
-                        >
-                        <button 
-                            type="button" 
-                            onclick="togglePassword('studentPasswordInput', 'toggleStudentPwdBtn')" 
-                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1rem; color: #94a3b8;"
-                            id="toggleStudentPwdBtn"
-                            title="Hiện/Ẩn mật khẩu"
-                        >👁️</button>
-                    </div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">
-                        🔑 Mật khẩu mặc định: <strong>ictu@123456</strong> (có thể đổi sau khi vào hệ thống).
-                    </div>
-                </div>
-
-                <button type="submit" id="studentSubmitBtn" class="btn btn-primary" style="width: 100%; padding: 0.85rem; font-weight: 700;">
-                    🚀 Đăng nhập Sinh viên
-                </button>
-            </form>
-
-            <!-- Gợi ý tài khoản demo Sinh viên -->
-            <div class="quick-login-pills">
-                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180075', 'ictu@123456')">
-                    🎓 SV Minh Hòa (dtc235180075)
-                </button>
-                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180076', 'ictu@123456')">
-                    🎓 SV Nam (dtc235180076)
-                </button>
-                <button type="button" class="quick-login-btn" onclick="quickFillStudent('dtc235180077', 'ictu@123456')">
-                    🎓 SV Lan (dtc235180077)
+            <!-- Nút quay lại bước 1 -->
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <button type="button" class="btn-back-step" onclick="showStep('stepRoleSelection')">
+                    ← Quay lại chọn đối tượng đăng nhập
                 </button>
             </div>
         </div>
 
-        <!-- Cấu hình Máy chủ API (Thuận tiện khi demo online qua Vercel) -->
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.78rem; color: var(--text-muted); border-top: 1px dashed var(--border); padding-top: 0.8rem;">
-            <span>🌐 Máy chủ API: <code id="displayApiBase" style="font-size: 0.74rem; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px;"></code></span>
-            <button type="button" onclick="promptConfigApiUrl()" style="background: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 0.74rem; cursor: pointer; color: var(--text-primary); margin-left: 6px;">
+        <!-- Cấu hình Máy chủ API (Thuận tiện khi demo online qua Vercel / Render) -->
+        <div class="login-footer-api">
+            <span>🌐 API: <code id="displayApiBase"></code></span>
+            <button type="button" onclick="promptConfigApiUrl()" class="btn-api-cfg">
                 ⚙️ Đổi máy chủ
             </button>
         </div>
 
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- MODAL CHỌN NHANH TÀI KHOẢN GOOGLE ICTU (1 CHẠM DEMO) -->
+    <!-- ======================================================== -->
+    <div id="googleDemoModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #1f2937;">Đăng nhập bằng tài khoản Google ICTU</h3>
+                </div>
+                <button type="button" class="btn-close-modal" onclick="closeGoogleDemoModal()">✕</button>
+            </div>
+            
+            <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">
+                Chọn một tài khoản Google hoặc Microsoft do Trường cấp dưới đây để đăng nhập trực tiếp vào hệ thống:
+            </p>
+
+            <div class="google-account-list">
+                <div class="google-account-item" onclick="selectGoogleAccount('dtc235180077@ictu.edu.vn', 'Nguyễn Thị Lan')">
+                    <div class="avatar-circle" style="background: #e0f2fe; color: #0284c7;">L</div>
+                    <div class="acc-info">
+                        <div class="acc-name">Nguyễn Thị Lan (Sinh viên)</div>
+                        <div class="acc-email">dtc235180077@ictu.edu.vn</div>
+                    </div>
+                </div>
+
+                <div class="google-account-item" onclick="selectGoogleAccount('dtc235180075@ictu.edu.vn', 'Phạm Minh Hòa')">
+                    <div class="avatar-circle" style="background: #ecfdf5; color: #059669;">H</div>
+                    <div class="acc-info">
+                        <div class="acc-name">Phạm Minh Hòa (Sinh viên)</div>
+                        <div class="acc-email">dtc235180075@ictu.edu.vn</div>
+                    </div>
+                </div>
+
+                <div class="google-account-item" onclick="selectGoogleAccount('dtc235180076@ms.ictu.edu.vn', 'Trần Văn Nam')">
+                    <div class="avatar-circle" style="background: #fef3c7; color: #d97706;">N</div>
+                    <div class="acc-info">
+                        <div class="acc-name">Trần Văn Nam (Microsoft Email)</div>
+                        <div class="acc-email">dtc235180076@ms.ictu.edu.vn</div>
+                    </div>
+                </div>
+
+                <div class="google-account-item" onclick="selectGoogleAccount('nvthanh@ictu.edu.vn', 'TS. Nguyễn Văn Thành')">
+                    <div class="avatar-circle" style="background: #ede9fe; color: #7c3aed;">T</div>
+                    <div class="acc-info">
+                        <div class="acc-name">TS. Nguyễn Văn Thành (Giảng viên)</div>
+                        <div class="acc-email">nvthanh@ictu.edu.vn</div>
+                    </div>
+                </div>
+
+                <div class="google-account-item" onclick="selectGoogleAccount('ptthao@ictu.edu.vn', 'ThS. Phan Thị Thảo')">
+                    <div class="avatar-circle" style="background: #fce7f3; color: #db2777;">T</div>
+                    <div class="acc-info">
+                        <div class="acc-name">ThS. Phan Thị Thảo (Giảng viên)</div>
+                        <div class="acc-email">ptthao@ictu.edu.vn</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nhập email Google tùy chỉnh -->
+            <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.8rem;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">
+                    Hoặc nhập địa chỉ email Google khác:
+                </label>
+                <div style="display: flex; gap: 6px;">
+                    <input type="email" id="customGoogleEmailInput" placeholder="masv@ictu.edu.vn" class="form-control" style="font-size: 0.85rem; padding: 6px 10px;">
+                    <button type="button" class="btn btn-primary" onclick="submitCustomGoogleEmail()" style="font-size: 0.85rem; padding: 6px 14px; white-space: nowrap;">
+                        Đăng nhập
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="auth.js"></script>

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { ethers } = require("ethers");
 
 const db = require("../database/database");
 const { SECRET, verifyToken } = require("../middleware/auth");
@@ -148,6 +149,217 @@ router.post("/login", (req, res) => {
             }
         }
     );
+});
+
+// ========================
+// Google Sign-In / SSO Authentication
+// Nhận credential (Google ID Token) hoặc email từ luồng Google Sign-In
+// ========================
+router.post("/google", async (req, res) => {
+    try {
+        const { credential, email: directEmail, name: directName } = req.body;
+
+        let email = "";
+        let fullName = "";
+
+        // 1. Nếu có Google ID Token từ GIS, xác thực trực tiếp qua Google OAuth2 API
+        if (credential) {
+            try {
+                const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+                if (!googleRes.ok) {
+                    return res.status(401).json({
+                        error: "Mã xác thực Google ID Token không hợp lệ hoặc đã hết hạn."
+                    });
+                }
+                const payload = await googleRes.json();
+                email = payload.email ? String(payload.email).trim().toLowerCase() : "";
+                fullName = payload.name || payload.given_name || (email ? email.split("@")[0] : "");
+            } catch (gErr) {
+                console.error("Google verify token error:", gErr);
+                return res.status(500).json({
+                    error: "Không thể kết nối đến máy chủ Google để xác thực ID Token."
+                });
+            }
+        } else if (directEmail) {
+            // Chế độ demo / direct email
+            email = String(directEmail).trim().toLowerCase();
+            fullName = directName || email.split("@")[0];
+        }
+
+        if (!email) {
+            return res.status(400).json({
+                error: "Vui lòng cung cấp email tài khoản Google để đăng nhập"
+            });
+        }
+
+        // 2. PHÂN LOẠI ĐỐI TƯỢNG ĐĂNG NHẬP:
+
+        // A. Kiểm tra Cán bộ / Giảng viên / Quản trị viên
+        db.get(
+            `SELECT * FROM users WHERE LOWER(username) = LOWER(?)`,
+            [email],
+            (userErr, existingUser) => {
+                if (userErr) {
+                    return res.status(500).json({ error: userErr.message });
+                }
+
+                // Nếu tài khoản đã tồn tại với quyền ADMIN hoặc TEACHER
+                if (existingUser && (existingUser.role === "ADMIN" || existingUser.role === "TEACHER")) {
+                    const token = jwt.sign(
+                        {
+                            id: existingUser.id,
+                            username: existingUser.username,
+                            role: existingUser.role,
+                            studentId: null,
+                            name: existingUser.name || fullName
+                        },
+                        SECRET,
+                        { expiresIn: "8h" }
+                    );
+
+                    return res.json({
+                        success: true,
+                        message: "Google login success",
+                        role: existingUser.role,
+                        username: existingUser.username,
+                        name: existingUser.name || fullName,
+                        teacherName: existingUser.name || fullName,
+                        token: token
+                    });
+                }
+
+                // Kiểm tra trong danh sách trắng Giảng viên (teacher_whitelist)
+                db.get(
+                    `SELECT * FROM teacher_whitelist WHERE LOWER(email) = LOWER(?)`,
+                    [email],
+                    (wlErr, whitelisted) => {
+                        if (wlErr) {
+                            return res.status(500).json({ error: wlErr.message });
+                        }
+
+                        if (whitelisted) {
+                            const role = whitelisted.role || "TEACHER";
+                            const displayName = whitelisted.name || fullName;
+
+                            return db.run(
+                                `INSERT OR IGNORE INTO users (username, password, role, name) VALUES (?, 'SSO_GOOGLE', ?, ?)`,
+                                [email, role, displayName],
+                                function() {
+                                    db.get(
+                                        `SELECT id FROM users WHERE LOWER(username) = LOWER(?)`,
+                                        [email],
+                                        (getErr, uRow) => {
+                                            const token = jwt.sign(
+                                                { id: uRow ? uRow.id : 0, username: email, role, studentId: null, name: displayName },
+                                                SECRET,
+                                                { expiresIn: "8h" }
+                                            );
+
+                                            return res.json({
+                                                success: true,
+                                                message: "Google login success",
+                                                role,
+                                                username: email,
+                                                name: displayName,
+                                                teacherName: displayName,
+                                                token
+                                            });
+                                        }
+                                    );
+                                }
+                            );
+                        }
+
+                        // B. Đối tượng Sinh viên (masv@ictu.edu.vn hoặc masv@ms.ictu.edu.vn)
+                        let extractedId = email.split("@")[0].toUpperCase();
+                        if (extractedId.includes(".")) {
+                            extractedId = extractedId.split(".")[0].toUpperCase();
+                        }
+
+                        db.get(
+                            `SELECT * FROM students WHERE LOWER(studentId) = LOWER(?) OR (email IS NOT NULL AND LOWER(email) = LOWER(?))`,
+                            [extractedId, email],
+                            (sErr, student) => {
+                                if (sErr) {
+                                    return res.status(500).json({ error: sErr.message });
+                                }
+
+                                if (student) {
+                                    const sId = student.studentId;
+                                    const sName = student.name || fullName;
+                                    const sWallet = student.wallet;
+
+                                    db.run(
+                                        `INSERT OR IGNORE INTO users (username, password, role, studentId, name) VALUES (?, 'SSO_GOOGLE', 'STUDENT', ?, ?)`,
+                                        [email, sId, sName],
+                                        () => {
+                                            const token = jwt.sign(
+                                                { username: email, role: "STUDENT", studentId: sId, name: sName },
+                                                SECRET,
+                                                { expiresIn: "8h" }
+                                            );
+
+                                            return res.json({
+                                                success: true,
+                                                message: "Google student login success",
+                                                role: "STUDENT",
+                                                username: email,
+                                                studentId: sId,
+                                                studentName: sName,
+                                                name: sName,
+                                                wallet: sWallet,
+                                                token
+                                            });
+                                        }
+                                    );
+                                } else {
+                                    // Sinh viên ICTU mới chưa có trong DB:
+                                    // Tự động khởi tạo hồ sơ kèm địa chỉ ví EVM tất định từ keccak256(email)
+                                    const hash = ethers.keccak256(ethers.toUtf8Bytes(email));
+                                    const newWallet = ethers.getAddress("0x" + hash.slice(-40));
+                                    const sId = extractedId;
+                                    const sName = fullName || `Sinh viên ${sId}`;
+
+                                    db.run(
+                                        `INSERT OR IGNORE INTO students (studentId, name, wallet, email) VALUES (?, ?, ?, ?)`,
+                                        [sId, sName, newWallet, email],
+                                        function() {
+                                            db.run(
+                                                `INSERT OR IGNORE INTO users (username, password, role, studentId, name) VALUES (?, 'SSO_GOOGLE', 'STUDENT', ?, ?)`,
+                                                [email, sId, sName],
+                                                function() {
+                                                    const token = jwt.sign(
+                                                        { username: email, role: "STUDENT", studentId: sId, name: sName },
+                                                        SECRET,
+                                                        { expiresIn: "8h" }
+                                                    );
+
+                                                    return res.json({
+                                                        success: true,
+                                                        message: "Google student auto-provisioned success",
+                                                        role: "STUDENT",
+                                                        username: email,
+                                                        studentId: sId,
+                                                        studentName: sName,
+                                                        name: sName,
+                                                        wallet: newWallet,
+                                                        token
+                                                    });
+                                                }
+                                            );
+                                        }
+                                    );
+                                }
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    } catch (err) {
+        console.error("Auth google route error:", err);
+        return res.status(500).json({ error: "Lỗi xử lý xác thực Google: " + err.message });
+    }
 });
 
 // ========================
