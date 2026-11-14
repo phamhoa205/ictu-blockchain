@@ -100,10 +100,29 @@ async function sendIbnTx(to, data, gasLimit = 350000) {
 }
 
 /**
+ * Chuyển đổi an toàn giá trị amount từ Wei về đơn vị token:
+ * Nếu amount >= 10^14 (lưu dạng 18 decimals trên ERC-20), dùng formatUnits(amount, 18).
+ * Nếu amount nhỏ hơn, đây là số nguyên token thông thường.
+ */
+function parseRewardAmount(rawAmount) {
+  if (rawAmount === null || rawAmount === undefined) return 0;
+  try {
+    const rawBig = BigInt(rawAmount.toString());
+    if (rawBig >= BigInt(10 ** 14)) {
+      const formatted = ethers.formatUnits(rawBig, 18);
+      return Math.round(Number(formatted));
+    }
+    return Number(rawBig);
+  } catch (e) {
+    return Number(rawAmount) || 0;
+  }
+}
+
+/**
  * Đọc số dư token của sinh viên:
  * 1. Thử gọi API Gateway /api/contracts/RewardToken/call
  * 2. Thử gọi RPC node nếu có
- * 3. Fallback sang tính tổng token từ lịch sử bảng rewards trong SQLite
+ * 3. Fallback sang tính tổng token từ lịch sử bảng rewards trong SQLite (đã tự động đồng bộ từ IBN)
  */
 async function getStudentBalance(studentAddress) {
   const cleanAddress = ethers.getAddress(studentAddress.trim().toLowerCase());
@@ -125,7 +144,8 @@ async function getStudentBalance(studentAddress) {
       if (res.ok) {
         const data = await res.json();
         if (data && data.result !== undefined) {
-          return BigInt(data.result);
+          const parsed = parseRewardAmount(data.result);
+          return BigInt(parsed);
         }
       }
     } catch (gatewayErr) {
@@ -136,7 +156,8 @@ async function getStudentBalance(studentAddress) {
   // Cách 2: Thử đọc từ JSON-RPC nếu provider kết nối được
   if (rawTokenContract && !isIbnGatewayMode) {
     try {
-      return await rawTokenContract.balanceOf(cleanAddress);
+      const bal = await rawTokenContract.balanceOf(cleanAddress);
+      return BigInt(parseRewardAmount(bal));
     } catch (rpcErr) {
       // RPC không phản hồi -> chuyển sang fallback SQLite
     }
@@ -316,6 +337,219 @@ async function checkConnection() {
   };
 }
 
+/**
+ * Tự động đồng bộ lịch sử giao dịch từ IBN Gateway (Auto Re-indexing):
+ * Gọi API GET /api/accounts/{accountId}/transactions để lấy toàn bộ lịch sử on-chain,
+ * giải mã calldata gửi tới RewardManager và nạp lại vào bảng `rewards` trong SQLite.
+ */
+async function syncTransactionsFromIBN() {
+  if (!isIbnGatewayMode) {
+    console.log("ℹ️ [IBN Auto-Sync] Bỏ qua đồng bộ on-chain (chưa cấu hình IBN_ACCOUNT_ID / IBN_API_KEY).");
+    return { success: false, syncedCount: 0, reason: "NOT_IN_GATEWAY_MODE" };
+  }
+
+  console.log(`📡 [IBN Auto-Sync] Bắt đầu đồng bộ lịch sử giao dịch từ IBN Gateway (${ibnBaseUrl})...`);
+
+  try {
+    const endpoint = `${ibnBaseUrl}/api/accounts/${ibnAccountId}/transactions?limit=200`;
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "X-API-Key": ibnApiKey,
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      const text = await response.text();
+      console.warn(`⚠️ [IBN Auto-Sync] IBN Gateway phản hồi HTTP ${status}: ${text.slice(0, 200)}`);
+      return { success: false, syncedCount: 0, error: `HTTP ${status}` };
+    }
+
+    const body = await response.json();
+    let txList = [];
+    if (Array.isArray(body)) {
+      txList = body;
+    } else if (body && Array.isArray(body.transactions)) {
+      txList = body.transactions;
+    } else if (body && Array.isArray(body.data)) {
+      txList = body.data;
+    } else if (body && Array.isArray(body.items)) {
+      txList = body.items;
+    }
+
+    if (!txList || txList.length === 0) {
+      console.log("ℹ️ [IBN Auto-Sync] Không tìm thấy giao dịch nào từ tài khoản IBN.");
+      return { success: true, syncedCount: 0 };
+    }
+
+    const targetManager = (rewardManagerAddress || "").toLowerCase();
+    let syncedCount = 0;
+
+    for (const tx of txList) {
+      try {
+        const toAddress = (tx.to || tx.recipient || tx.contractAddress || "").toLowerCase();
+        
+        // Chỉ xử lý các giao dịch gửi tới hợp đồng RewardManager
+        if (targetManager && toAddress !== targetManager) {
+          continue;
+        }
+
+        // Bỏ qua các giao dịch thất bại rõ ràng
+        const txStatus = tx.status !== undefined ? String(tx.status).toLowerCase() : "";
+        if (txStatus === "failed" || txStatus === "reverted" || txStatus === "0") {
+          continue;
+        }
+
+        const calldata = tx.data || tx.input || tx.calldata;
+        if (!calldata || calldata === "0x" || calldata.length < 10) {
+          continue;
+        }
+
+        const txHash = tx.hash || tx.txHash || tx.transactionHash || tx.id;
+        const txDate = tx.createdAt || tx.timestamp || tx.blockTimestamp || new Date().toISOString();
+
+        // 1. Giải mã giao dịch qua Interface của RewardManager
+        let parsed = null;
+        try {
+          parsed = managerInterface.parseTransaction({ data: calldata, value: tx.value || 0 });
+        } catch (_) {
+          // Calldata không khớp ABI RewardManager
+        }
+
+        if (parsed) {
+          const fnName = parsed.name;
+          const args = parsed.args;
+
+          if (fnName === "issueReward") {
+            const studentWallet = ethers.getAddress(args[0]);
+            const amount = parseRewardAmount(args[1]);
+            const reason = args[2] || "Khen thưởng học tập (On-chain)";
+
+            const inserted = await insertRewardRecord(studentWallet, amount, reason, txHash, txDate);
+            if (inserted) syncedCount++;
+          } else if (fnName === "issueRewardWithHash") {
+            const studentWallet = ethers.getAddress(args[0]);
+            const amount = parseRewardAmount(args[1]);
+            const reasonHash = String(args[2]);
+            const reason = `Khen thưởng sinh viên (Minh chứng: ${reasonHash.slice(0, 10)}...)`;
+
+            const inserted = await insertRewardRecord(studentWallet, amount, reason, txHash, txDate);
+            if (inserted) syncedCount++;
+          } else if (fnName === "batchIssueReward") {
+            const students = args[0];
+            const amounts = args[1];
+            const batchEvidenceHash = String(args[2]);
+            const reason = `Khen thưởng theo lô (Minh chứng: ${batchEvidenceHash.slice(0, 10)}...)`;
+
+            if (Array.isArray(students) && Array.isArray(amounts)) {
+              for (let i = 0; i < students.length; i++) {
+                const sWallet = ethers.getAddress(students[i]);
+                const sAmount = parseRewardAmount(amounts[i]);
+                const inserted = await insertRewardRecord(sWallet, sAmount, reason, txHash, txDate);
+                if (inserted) syncedCount++;
+              }
+            }
+          } else if (fnName === "approveProposal") {
+            const proposalId = Number(args[0]);
+            const proposal = await getProposalById(proposalId);
+            if (proposal) {
+              const studentWallet = ethers.getAddress(proposal.studentWallet);
+              const amount = parseRewardAmount(proposal.amount);
+              const reason = proposal.reason || `Phê duyệt đề xuất #${proposalId}`;
+              const inserted = await insertRewardRecord(studentWallet, amount, reason, txHash, txDate);
+              if (inserted) syncedCount++;
+            }
+          }
+        }
+
+        // 2. Nếu có event logs trong tx, parse thêm RewardIssued event
+        if (tx.logs && Array.isArray(tx.logs)) {
+          for (const log of tx.logs) {
+            try {
+              const parsedLog = managerInterface.parseLog(log);
+              if (parsedLog && parsedLog.name === "RewardIssued") {
+                const studentWallet = ethers.getAddress(parsedLog.args.student);
+                const amount = parseRewardAmount(parsedLog.args.amount);
+                const reason = parsedLog.args.reason || "Khen thưởng học tập (On-chain)";
+                const inserted = await insertRewardRecord(studentWallet, amount, reason, txHash, txDate);
+                if (inserted) syncedCount++;
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (itemErr) {
+        console.warn(`⚠️ [IBN Auto-Sync] Bỏ qua giao dịch ${tx.hash || "unknown"}:`, itemErr.message);
+      }
+    }
+
+    console.log(`✅ [IBN Auto-Sync] Hoàn tất đồng bộ: Đã thêm ${syncedCount} giao dịch mới vào CSDL SQLite.`);
+    return { success: true, syncedCount };
+  } catch (error) {
+    console.warn("⚠️ [IBN Auto-Sync] Lỗi trong quá trình đồng bộ từ IBN Gateway:", error.message);
+    return { success: false, syncedCount: 0, error: error.message };
+  }
+}
+
+/**
+ * Chèn an toàn bản ghi vào bảng rewards trong SQLite nếu chưa tồn tại
+ */
+function insertRewardRecord(studentWallet, amount, reason, txHash, createdAt) {
+  return new Promise((resolve) => {
+    if (!studentWallet || !amount || amount <= 0 || !txHash) {
+      return resolve(false);
+    }
+
+    db.get(
+      `SELECT id FROM rewards WHERE LOWER(student) = LOWER(?) AND transactionHash = ?`,
+      [studentWallet, txHash],
+      (err, row) => {
+        if (err || row) {
+          // Đã tồn tại hoặc lỗi đọc -> bỏ qua
+          return resolve(false);
+        }
+
+        // Tự động kiểm tra và ánh xạ sinh viên vào bảng students nếu chưa có
+        db.get(
+          `SELECT studentId FROM students WHERE LOWER(wallet) = LOWER(?)`,
+          [studentWallet],
+          (sErr, student) => {
+            if (!student) {
+              const autoId = `EXT_${studentWallet.slice(2, 8).toUpperCase()}`;
+              const autoName = `Sinh viên (${studentWallet.slice(0, 6)}...${studentWallet.slice(-4)})`;
+              db.run(
+                `INSERT OR IGNORE INTO students (studentId, name, wallet, email) VALUES (?, ?, ?, ?)`,
+                [autoId, autoName, studentWallet, `${autoId.toLowerCase()}@ictu.edu.vn`]
+              );
+            }
+
+            db.run(
+              `INSERT INTO rewards (student, amount, reason, transactionHash, createdAt) VALUES (?, ?, ?, ?, ?)`,
+              [studentWallet, amount, reason, txHash, createdAt || new Date().toISOString()],
+              function (iErr) {
+                if (iErr) {
+                  return resolve(false);
+                }
+                resolve(true);
+              }
+            );
+          }
+        );
+      }
+    );
+  });
+}
+
+function getProposalById(proposalId) {
+  return new Promise((resolve) => {
+    db.get(`SELECT * FROM proposals WHERE id = ?`, [proposalId], (err, row) => {
+      if (err || !row) return resolve(null);
+      resolve(row);
+    });
+  });
+}
+
 module.exports = {
   provider,
   wallet,
@@ -324,5 +558,7 @@ module.exports = {
   rewardTokenAddress,
   rewardManagerAddress,
   checkConnection,
-  isIbnGatewayMode
+  isIbnGatewayMode,
+  parseRewardAmount,
+  syncTransactionsFromIBN
 };

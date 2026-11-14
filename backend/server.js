@@ -101,8 +101,10 @@ app.use((err, req, res, next) => {
 });
 
 // ==========================
-// Start Server
+// Start Server & Auto-Sync
 // ==========================
+
+const { syncTransactionsFromIBN } = require("./services/blockchain");
 
 const PORT = process.env.PORT || 3000;
 
@@ -110,7 +112,14 @@ const PORT = process.env.PORT || 3000;
 module.exports = app;
 
 if (require.main === module) {
-    app.listen(PORT, "0.0.0.0", () => {
+    app.listen(PORT, "0.0.0.0", async () => {
         console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+
+        // Tự động đồng bộ lịch sử giao dịch từ IBN Blockchain (Auto Re-indexing cho Render ephemeral storage)
+        try {
+            await syncTransactionsFromIBN();
+        } catch (syncErr) {
+            console.warn("⚠️ [IBN Auto-Sync] Lỗi lúc khởi động:", syncErr.message);
+        }
     });
 }

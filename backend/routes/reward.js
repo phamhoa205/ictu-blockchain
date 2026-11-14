@@ -8,7 +8,8 @@ const {
     tokenContract,
     rewardTokenAddress,
     rewardManagerAddress,
-    checkConnection
+    checkConnection,
+    syncTransactionsFromIBN
 } = require("../services/blockchain");
 
 const { verifyToken, isAdmin, isTeacher, isTeacherOrAdmin, isStudent } = require("../middleware/auth");
@@ -373,6 +374,25 @@ router.get("/status", async (req, res) => {
             managerAddress: rewardManagerAddress
         }
     });
+});
+
+// =====================================
+// Manual On-chain Transaction Re-indexing
+// ADMIN ONLY
+// =====================================
+router.post("/sync", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const result = await syncTransactionsFromIBN();
+        return res.json({
+            success: true,
+            message: `Đồng bộ dữ liệu từ IBN Gateway thành công (${result.syncedCount || 0} giao dịch mới)`,
+            ...result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            error: "Lỗi đồng bộ từ IBN: " + error.message
+        });
+    }
 });
 
 // =====================================
