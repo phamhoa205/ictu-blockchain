@@ -25,6 +25,29 @@ function initTeacherProfile() {
     if (avatarEl) avatarEl.textContent = displayName.substring(0, 2).toUpperCase();
 }
 
+// Helper: Kiểm tra mã sinh viên chuẩn ICTU (DTC + 9 chữ số)
+function getValidDtcStudentId(student) {
+    if (!student) return "";
+    const DTC_REGEX = /^dtc\d{9}$/i;
+    
+    // 1. Kiểm tra trường studentId
+    const rawId = (student.studentId || "").trim();
+    if (DTC_REGEX.test(rawId)) {
+        return rawId.toUpperCase();
+    }
+
+    // 2. Kiểm tra phần tên trước @ của email nếu có
+    if (student.email) {
+        const emailPrefix = student.email.split("@")[0].trim();
+        if (DTC_REGEX.test(emailPrefix)) {
+            return emailPrefix.toUpperCase();
+        }
+    }
+
+    // Không khớp định dạng DTC + 9 số -> trả về rỗng
+    return "";
+}
+
 // ==========================================
 // Load Students for Dropdown
 // ==========================================
@@ -58,7 +81,19 @@ async function loadStudentsDropdown() {
 
         let options = `<option value="">-- Chọn sinh viên ICTU cần đề xuất --</option>`;
         students.forEach(st => {
-            options += `<option value="${st.studentId}">${st.studentId} - ${st.name}</option>`;
+            const validId = getValidDtcStudentId(st);
+            let label = "";
+            if (validId) {
+                label = `${validId} - ${st.name || st.email}`;
+            } else {
+                // Tài khoản không phải mã DTC + 9 số: chỉ hiển thị email/tên mà không gắn mã sinh viên giả phía trước
+                if (st.email && st.name && st.email.toLowerCase() !== st.name.toLowerCase()) {
+                    label = `${st.name} (${st.email})`;
+                } else {
+                    label = st.email || st.name || st.studentId;
+                }
+            }
+            options += `<option value="${st.studentId}">${label}</option>`;
         });
         select.innerHTML = options;
 
@@ -71,7 +106,7 @@ async function loadStudentsDropdown() {
 function handleStudentSelectChange() {
     const select = document.getElementById("proposalStudentSelect");
     const previewBox = document.getElementById("selectedStudentPreview");
-    const nameEl = document.getElementById("previewStudentName");
+    const emailEl = document.getElementById("previewStudentEmail") || document.getElementById("previewStudentName");
     const idEl = document.getElementById("previewStudentId");
     const walletEl = document.getElementById("previewStudentWallet");
 
@@ -83,9 +118,22 @@ function handleStudentSelectChange() {
 
     const student = allStudentsList.find(s => s.studentId.toLowerCase() === selectedId.toLowerCase());
     if (student) {
-        nameEl.textContent = student.name;
-        idEl.textContent = student.studentId;
-        walletEl.textContent = student.wallet;
+        // 1. Hiển thị Gmail của sinh viên
+        if (emailEl) {
+            emailEl.textContent = student.email || "--";
+        }
+
+        // 2. Mã SV: chỉ hiển thị nếu là DTC + đúng 9 số, ngược lại để trống hoàn toàn
+        const validId = getValidDtcStudentId(student);
+        if (idEl) {
+            idEl.textContent = validId;
+        }
+
+        // 3. Địa chỉ ví nhận thưởng
+        if (walletEl) {
+            walletEl.textContent = student.wallet || "--";
+        }
+
         previewBox.style.display = "block";
     } else {
         previewBox.style.display = "none";
@@ -236,10 +284,12 @@ async function loadMyProposals() {
                 `;
             }
 
+            const displayStudentId = /^dtc\d{9}$/i.test(p.studentId || "") ? p.studentId.toUpperCase() : "";
+
             html += `
                 <tr>
                     <td class="mono">#${p.id}</td>
-                    <td><strong>${p.studentId}</strong></td>
+                    <td><strong>${displayStudentId}</strong></td>
                     <td>${p.studentName || "--"}</td>
                     <td><span class="badge badge-token">+${p.amount} ICTU</span></td>
                     <td style="max-width: 250px;">

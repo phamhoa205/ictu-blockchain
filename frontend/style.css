@@ -754,6 +754,14 @@ select.form-control {
     margin-bottom: 1.75rem;
 }
 
+.ictu-main-logo {
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    margin: 0 auto 10px;
+    display: block;
+}
+
 .ictu-brand-emblem {
     display: flex;
     align-items: center;

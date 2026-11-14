@@ -284,19 +284,6 @@ async function handleStudentLoginSubmit(event) {
     }
 }
 
-// Quick fill helpers
-function quickFillTeacher(email, pass) {
-    document.getElementById("teacherEmailInput").value = email;
-    document.getElementById("teacherPasswordInput").value = pass;
-    document.getElementById("teacherSubmitBtn").focus();
-}
-
-function quickFillStudent(id, pass) {
-    document.getElementById("studentIdInput").value = id;
-    document.getElementById("studentPasswordInput").value = pass;
-    document.getElementById("studentSubmitBtn").focus();
-}
-
 // Password toggle helper
 function togglePassword(inputId, btnId) {
     const input = document.getElementById(inputId);
