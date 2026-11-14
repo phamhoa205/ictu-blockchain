@@ -429,6 +429,7 @@ async function handleIssueReward(event) {
     btn.disabled = true;
     btn.innerHTML = "⏳ Đang ký giao dịch & ghi nhận vào khối...";
 
+    let data = null;
     try {
         const response = await fetch(`${API}/issue`, {
             method: "POST",
@@ -436,44 +437,55 @@ async function handleIssueReward(event) {
             body: JSON.stringify({ studentId, amount: Number(amount), reason })
         });
 
-        const data = await response.json();
+        data = await response.json();
 
         if (!response.ok) {
             showToast(data.error || "Giao dịch trao thưởng thất bại", "error");
-            btn.disabled = false;
-            btn.innerHTML = "🚀 Xác nhận & Ký giao dịch Trao thưởng";
             return;
         }
+    } catch (err) {
+        console.error("Issue reward network error:", err);
+        showToast("Lỗi khi kết nối tới máy chủ trao thưởng: " + err.message, "error");
+        return;
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = "🚀 Xác nhận & Ký giao dịch Trao thưởng";
+    }
 
-        showToast(`Đã trao ${amount} ICTU cho sinh viên ${data.name}!`, "success");
+    // Hiển thị thông báo trao thưởng thành công
+    showToast(`Đã trao ${amount} ICTU cho sinh viên ${data.name}!`, "success");
 
-        // Show Transaction Receipt Modal
-        showTxReceiptModal({
-            title: "Trao thưởng Token thành công",
-            studentId: data.studentId,
-            name: data.name,
-            wallet: data.wallet,
-            amount: data.amount,
-            reason: data.reason,
-            txHash: data.transaction,
-            blockNumber: data.blockNumber,
-            gasUsed: data.gasUsed
-        });
+    // Hiển thị biên lai giao dịch điện tử
+    try {
+        if (typeof showTxReceiptModal === "function") {
+            showTxReceiptModal({
+                title: "Trao thưởng Token thành công",
+                studentId: data.studentId,
+                name: data.name,
+                wallet: data.wallet,
+                amount: data.amount,
+                reason: data.reason,
+                txHash: data.transaction,
+                blockNumber: data.blockNumber,
+                gasUsed: data.gasUsed,
+                time: new Date().toLocaleString("vi-VN")
+            });
+        }
+    } catch (modalErr) {
+        console.warn("Lỗi mở modal biên lai:", modalErr);
+    }
 
-        // Reset form & reload stats
+    // Làm mới UI ngầm (bọc riêng để lỗi UI không làm bật toast lỗi Blockchain)
+    try {
         resetIssueForm();
         await loadStats();
         await checkBlockchainHealth();
         await loadStudents();
         await loadHistory(1);
         await loadLeaderboard();
-
-    } catch (err) {
-        console.error("Issue reward error:", err);
-        showToast("Lỗi khi kết nối tới máy chủ trao thưởng", "error");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = "🚀 Xác nhận & Ký giao dịch Trao thưởng";
+        await loadAdminProposals();
+    } catch (uiErr) {
+        console.warn("Cảnh báo làm mới dữ liệu sau trao thưởng:", uiErr);
     }
 }
 
@@ -851,43 +863,56 @@ async function approveProposal(proposalId) {
 
     showToast("⏳ Đang gửi giao dịch lên Smart Contract Blockchain...", "info");
 
+    let data = null;
     try {
         const response = await fetch(`${API}/proposals/${proposalId}/approve`, {
             method: "POST",
             headers: authHeader()
         });
 
-        const data = await response.json();
+        data = await response.json();
 
         if (!response.ok) {
             showToast(data.error || "Phê duyệt thất bại", "error");
             return;
         }
+    } catch (err) {
+        console.error("Approve proposal network error:", err);
+        showToast("Lỗi kết nối khi gửi giao dịch Blockchain: " + err.message, "error");
+        return;
+    }
 
-        showToast("🎉 Phê duyệt thành công! Token đã được ghi nhận trên Blockchain.", "success");
+    // Hiển thị thông báo phê duyệt thành công
+    showToast("🎉 Phê duyệt thành công! Token đã được ghi nhận trên Blockchain.", "success");
 
-        // Display electronic receipt
-        displayTxReceipt({
-            title: "Biên lai Phê duyệt Đề xuất Giảng viên",
-            name: proposal.studentName,
-            studentId: proposal.studentId,
-            wallet: proposal.studentWallet,
-            amount: proposal.amount,
-            reason: proposal.reason,
-            txHash: data.transactionHash,
-            blockNumber: data.blockNumber,
-            gasUsed: data.gasUsed,
-            time: new Date().toLocaleString("vi-VN")
-        });
+    // Hiển thị biên lai điện tử trong khối try/catch an toàn
+    try {
+        if (typeof showTxReceiptModal === "function") {
+            showTxReceiptModal({
+                title: "Biên lai Phê duyệt Đề xuất Giảng viên",
+                name: proposal.studentName,
+                studentId: proposal.studentId,
+                wallet: proposal.studentWallet,
+                amount: proposal.amount,
+                reason: proposal.reason,
+                txHash: data.transactionHash,
+                blockNumber: data.blockNumber,
+                gasUsed: data.gasUsed,
+                time: new Date().toLocaleString("vi-VN")
+            });
+        }
+    } catch (modalErr) {
+        console.warn("Lỗi mở modal biên lai:", modalErr);
+    }
 
-        // Refresh all data
+    // Làm mới dữ liệu UI ngầm (bọc riêng để lỗi render UI không làm bật toast báo lỗi Blockchain)
+    try {
         await loadAdminProposals();
         await loadStats();
         await loadHistory(1);
-
-    } catch (err) {
-        console.error("Approve proposal error:", err);
-        showToast("Lỗi kết nối khi gửi giao dịch Blockchain", "error");
+        await loadLeaderboard();
+    } catch (uiErr) {
+        console.warn("Cảnh báo làm mới UI sau phê duyệt:", uiErr);
     }
 }
 
@@ -895,6 +920,7 @@ async function rejectProposal(proposalId) {
     const reason = prompt("Nhập lý do từ chối đề xuất này (tùy chọn):", "Chưa đáp ứng đủ tiêu chuẩn khen thưởng");
     if (reason === null) return; // user cancelled
 
+    let data = null;
     try {
         const response = await fetch(`${API}/proposals/${proposalId}/reject`, {
             method: "POST",
@@ -902,21 +928,30 @@ async function rejectProposal(proposalId) {
             body: JSON.stringify({ rejectReason: reason })
         });
 
-        const data = await response.json();
+        data = await response.json();
 
         if (!response.ok) {
             showToast(data.error || "Từ chối thất bại", "error");
             return;
         }
-
-        showToast("Đã từ chối đề xuất khen thưởng", "info");
-        await loadAdminProposals();
-
     } catch (err) {
-        console.error("Reject proposal error:", err);
-        showToast("Lỗi máy chủ", "error");
+        console.error("Reject proposal network error:", err);
+        showToast("Lỗi máy chủ khi từ chối đề xuất", "error");
+        return;
+    }
+
+    showToast("Đã từ chối đề xuất khen thưởng", "info");
+
+    try {
+        await loadAdminProposals();
+    } catch (uiErr) {
+        console.warn("Lỗi làm mới danh sách đề xuất:", uiErr);
     }
 }
+
+// Bí danh tương thích (Aliases)
+const loadProposals = loadAdminProposals;
+const displayTxReceipt = showTxReceiptModal;
 
 // ==========================================
 // Admin Whitelist Management (SSO)
