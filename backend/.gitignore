@@ -1,0 +1,11 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Node modules
+node_modules/
+
+# Runtime database
+*.db
+*.sqlite

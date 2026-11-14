@@ -1,4 +1,4 @@
-const LOGIN_API = `${typeof API_BASE !== "undefined" ? API_BASE : (localStorage.getItem("API_BASE_URL") || "http://localhost:3000/api")}/auth/login`;
+const LOGIN_API = `${typeof API_BASE !== "undefined" ? API_BASE : (typeof window !== "undefined" && window.API_BASE ? window.API_BASE : "http://localhost:3000/api")}/auth/login`;
 
 // Initialize UI on page load
 document.addEventListener("DOMContentLoaded", () => {

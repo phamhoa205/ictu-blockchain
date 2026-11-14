@@ -1,0 +1,24 @@
+{
+  "chain": "production",
+  "chainId": 2025,
+  "deployedAt": "2026-11-14T08:37:28.401Z",
+  "accountId": "6af7e9479ce30a3278af2087",
+  "contracts": {
+    "RewardToken": {
+      "address": "0x8fAAB493059E219255CeA538C4678Bd52C14788b",
+      "txHash": "0xe3deb38650a504d0d57fd6b1d2b8fa0c509157335a8db63e19d8ea6b95d7cc73"
+    },
+    "RewardManager": {
+      "address": "0x76B4E34AD84A0c64c1810dfed493a033fcD15436",
+      "txHash": "0x574b96942b34e8934b258795f507dbbbda893d00ba884bf793e151b01dfed561",
+      "constructorArgs": [
+        "0x8fAAB493059E219255CeA538C4678Bd52C14788b"
+      ]
+    }
+  },
+  "minterRoleGrant": {
+    "status": "SUCCESS_SUBMITTED",
+    "txHash": "0xb62090f18bb881b4ebd10a836558ee22f5a9772d3d1be211c048f7ac157ddb97",
+    "grantedAt": "2026-11-14T10:09:41.879Z"
+  }
+}

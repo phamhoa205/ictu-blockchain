@@ -1,8 +1,40 @@
 // ==========================================
-// Authentication & UI Utility Functions
+// Centralized API Configuration & Detection
 // ==========================================
 
-const API_BASE = window.API_BASE_URL || localStorage.getItem("API_BASE_URL") || "http://localhost:3000/api";
+// URL Backend trên Render khi triển khai Cloud (Thay bằng URL Render của bạn nếu khác)
+const DEFAULT_RENDER_API = "https://nckh-blockchain-backend.onrender.com/api";
+
+function resolveApiBaseUrl() {
+    // 1. Ưu tiên cấu hình do người dùng chủ động đặt qua giao diện / localStorage
+    if (typeof window !== "undefined" && window.API_BASE_URL) {
+        return window.API_BASE_URL;
+    }
+    const stored = typeof localStorage !== "undefined" ? localStorage.getItem("API_BASE_URL") : null;
+    if (stored) {
+        return stored;
+    }
+
+    // 2. Tự động nhận diện môi trường: localhost vs Production Cloud (Vercel)
+    if (typeof window !== "undefined" && window.location) {
+        const hostname = window.location.hostname;
+        const isLocal = hostname === "localhost" ||
+                        hostname === "127.0.0.1" ||
+                        hostname === "" ||
+                        hostname === "::1";
+        if (isLocal) {
+            return "http://localhost:3000/api";
+        }
+    }
+
+    // 3. Khi chạy trên domain thật (Vercel / Cloud), tự động trỏ về Backend Render
+    return DEFAULT_RENDER_API;
+}
+
+const API_BASE = resolveApiBaseUrl();
+if (typeof window !== "undefined") {
+    window.API_BASE = API_BASE;
+}
 
 function getToken() {
     return localStorage.getItem("token");
@@ -174,16 +206,16 @@ function formatDate(dateStr) {
 // API Server Configuration Helper (for Online / Vercel demo)
 // ==========================================
 function promptConfigApiUrl() {
-    const current = localStorage.getItem("API_BASE_URL") || "http://localhost:3000/api";
+    const current = localStorage.getItem("API_BASE_URL") || API_BASE;
     const input = prompt(
-        "Nhập địa chỉ máy chủ Backend API (ví dụ: https://nckh-api.onrender.com/api hoặc https://xxx.loca.lt/api):\n\nĐể trống và bấm OK nếu muốn dùng lại mặc định (http://localhost:3000/api):",
+        `Cấu hình địa chỉ Backend API (Render):\n\nĐịa chỉ hiện tại: ${current}\n\nNhập URL Backend mới (ví dụ: https://your-backend.onrender.com/api):\n(Để trống và bấm OK để khôi phục mặc định tự động theo môi trường localhost/Render):`,
         current
     );
     if (input !== null) {
         const trimmed = input.trim();
-        if (!trimmed || trimmed === "http://localhost:3000/api") {
+        if (!trimmed || trimmed === "http://localhost:3000/api" || trimmed === DEFAULT_RENDER_API) {
             localStorage.removeItem("API_BASE_URL");
-            alert("Đã đặt lại máy chủ API về mặc định: http://localhost:3000/api");
+            alert("Đã đặt lại máy chủ API về chế độ tự động nhận diện (localhost / Render)!");
         } else {
             const cleanUrl = trimmed.replace(/\/+$/, "");
             localStorage.setItem("API_BASE_URL", cleanUrl);

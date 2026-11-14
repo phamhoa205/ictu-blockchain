@@ -1,7 +1,8 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-const dbPath = path.resolve(__dirname, "reward.db");
+const dbDir = process.env.VERCEL ? "/tmp" : __dirname;
+const dbPath = path.resolve(dbDir, "reward.db");
 const db = new sqlite3.Database(dbPath);
 
 db.serialize(() => {

@@ -11,13 +11,14 @@ const app = express();
 // ==========================
 
 app.use(
-    cors()
+    cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+    })
 );
 
-
-app.use(
-    express.json()
-);
+app.use(express.json());
 
 
 
@@ -70,71 +71,46 @@ app.use(
 
 
 // ==========================
-// Test API
+// Test & Health Check API
 // ==========================
 
-app.get("/",(req,res)=>{
-
-
+app.get("/", (req, res) => {
     res.json({
-
-        message:
-        "ICTU Reward Backend Running",
-
-        status:
-        "OK"
-
+        message: "ICTU Blockchain Reward Backend Running",
+        status: "OK",
+        docs: "/api/reward/status"
     });
-
-
 });
 
-
-
-
+app.get("/health", (req, res) => {
+    res.json({
+        status: "OK",
+        timestamp: new Date().toISOString()
+    });
+});
 
 // ==========================
 // Error Handler
 // ==========================
 
-app.use((err,req,res,next)=>{
-
-
-    console.error(err);
-
-
-    res.status(500)
-    .json({
-
-        error:
-        "Internal Server Error"
-
+app.use((err, req, res, next) => {
+    console.error("Express Error Handler:", err);
+    res.status(500).json({
+        error: err.message || "Internal Server Error"
     });
-
-
 });
-
-
-
-
 
 // ==========================
 // Start Server
 // ==========================
 
-const PORT =
-process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
+// Export App for Serverless / Testing
+module.exports = app;
 
-
-app.listen(
-PORT,
-()=>{
-
-
-    console.log(
-        `🚀 Server running on port ${PORT}`
-    );
-
-
-});
+if (require.main === module) {
+    app.listen(PORT, "0.0.0.0", () => {
+        console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    });
+}
