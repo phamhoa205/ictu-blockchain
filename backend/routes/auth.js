@@ -153,17 +153,40 @@ router.post("/login", (req, res) => {
 
 // ========================
 // Google Sign-In / SSO Authentication
-// Nhận credential (Google ID Token) hoặc email từ luồng Google Sign-In
+// Nhận access_token (OAuth 2.0 UserInfo) hoặc credential (ID Token) từ Google Identity Services
 // ========================
 router.post("/google", async (req, res) => {
     try {
-        const { credential, email: directEmail, name: directName } = req.body;
+        const { access_token, credential, email: directEmail, name: directName } = req.body;
 
         let email = "";
         let fullName = "";
 
-        // 1. Nếu có Google ID Token từ GIS, xác thực trực tiếp qua Google OAuth2 API
-        if (credential) {
+        // 1. Xác thực qua Google OAuth 2.0 API chính thức
+        if (access_token) {
+            try {
+                const userinfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                    headers: { Authorization: `Bearer ${access_token}` }
+                });
+
+                if (!userinfoRes.ok) {
+                    const errText = await userinfoRes.text();
+                    console.error("Google userinfo failed:", userinfoRes.status, errText);
+                    return res.status(401).json({
+                        error: "Mã xác thực Google Access Token không hợp lệ hoặc đã hết hạn."
+                    });
+                }
+
+                const payload = await userinfoRes.json();
+                email = payload.email ? String(payload.email).trim().toLowerCase() : "";
+                fullName = payload.name || payload.given_name || (email ? email.split("@")[0] : "");
+            } catch (aErr) {
+                console.error("Google userinfo fetch error:", aErr);
+                return res.status(500).json({
+                    error: "Không thể kết nối đến máy chủ Google để xác thực Access Token: " + aErr.message
+                });
+            }
+        } else if (credential) {
             try {
                 const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
                 if (!googleRes.ok) {
@@ -177,7 +200,7 @@ router.post("/google", async (req, res) => {
             } catch (gErr) {
                 console.error("Google verify token error:", gErr);
                 return res.status(500).json({
-                    error: "Không thể kết nối đến máy chủ Google để xác thực ID Token."
+                    error: "Không thể kết nối đến máy chủ Google để xác thực ID Token: " + gErr.message
                 });
             }
         } else if (directEmail) {
@@ -188,13 +211,13 @@ router.post("/google", async (req, res) => {
 
         if (!email) {
             return res.status(400).json({
-                error: "Vui lòng cung cấp email tài khoản Google để đăng nhập"
+                error: "Không nhận được địa chỉ email từ tài khoản Google"
             });
         }
 
-        // 2. PHÂN LOẠI ĐỐI TƯỢNG ĐĂNG NHẬP:
+        // 2. PHÂN LOẠI & XÁC THỰC THEO EMAIL:
 
-        // A. Kiểm tra Cán bộ / Giảng viên / Quản trị viên
+        // A. Kiểm tra tài khoản Giảng viên / Quản trị viên
         db.get(
             `SELECT * FROM users WHERE LOWER(username) = LOWER(?)`,
             [email],
@@ -270,7 +293,16 @@ router.post("/google", async (req, res) => {
                             );
                         }
 
-                        // B. Đối tượng Sinh viên (masv@ictu.edu.vn hoặc masv@ms.ictu.edu.vn)
+                        // B. Kiểm tra tên miền Email trường ICTU:
+                        // Bắt buộc phải là email do trường cấp (@ictu.edu.vn hoặc @ms.ictu.edu.vn)
+                        const isIctuDomain = email.endsWith("@ictu.edu.vn") || email.endsWith("@ms.ictu.edu.vn");
+                        if (!isIctuDomain) {
+                            return res.status(403).json({
+                                error: "Vui lòng chọn tài khoản Email do trường ICTU cấp (@ictu.edu.vn) để đăng nhập!"
+                            });
+                        }
+
+                        // C. Đối tượng Sinh viên ICTU
                         let extractedId = email.split("@")[0].toUpperCase();
                         if (extractedId.includes(".")) {
                             extractedId = extractedId.split(".")[0].toUpperCase();
@@ -313,7 +345,7 @@ router.post("/google", async (req, res) => {
                                         }
                                     );
                                 } else {
-                                    // Sinh viên ICTU mới chưa có trong DB:
+                                    // Sinh viên ICTU mới lần đầu đăng nhập:
                                     // Tự động khởi tạo hồ sơ kèm địa chỉ ví EVM tất định từ keccak256(email)
                                     const hash = ethers.keccak256(ethers.toUtf8Bytes(email));
                                     const newWallet = ethers.getAddress("0x" + hash.slice(-40));

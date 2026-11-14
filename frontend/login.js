@@ -1,16 +1,17 @@
 // ==========================================
 // Cổng Đăng nhập ICTU (login.js)
 // Giao diện chuẩn Cổng thông tin Sinh viên ICTU (sinhvien.ictu.edu.vn)
-// Hỗ trợ Google Identity Services (GIS) & Microsoft Email
+// Hỗ trợ Google Identity Services (OAuth 2.0 Real Flow)
 // ==========================================
 
 const AUTH_BASE = typeof API_BASE !== "undefined" ? API_BASE : (typeof window !== "undefined" && window.API_BASE ? window.API_BASE : "http://localhost:3000/api");
 const LOGIN_API = `${AUTH_BASE}/auth/login`;
 const GOOGLE_AUTH_API = `${AUTH_BASE}/auth/google`;
 
-// Biến cấu hình Google Client ID (Nếu triển khai sản xuất có thể đặt window.GOOGLE_CLIENT_ID)
-window.GOOGLE_CLIENT_ID = window.GOOGLE_CLIENT_ID || "";
+// Cấu hình Client ID của Google OAuth 2.0
+const GOOGLE_CLIENT_ID = "1028946700644-let2h5pk92fapkbn6psh2ijsh6iiatkg.apps.googleusercontent.com";
 
+let googleTokenClient = null;
 let currentAuthRoleTarget = "STUDENT"; // "STUDENT" hoặc "TEACHER"
 
 // ==========================================
@@ -20,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Mặc định mở Bước 1: Chọn vai trò
     showStep("stepRoleSelection");
 
-    // Khởi tạo Google Identity Services (nếu có Client ID)
+    // Khởi tạo Google Identity Services
     initGoogleIdentityServices();
 });
 
@@ -65,94 +66,69 @@ function toggleStudentPasswordForm() {
 }
 
 // ==========================================
-// Tích hợp Google Sign-In (GIS) & Demo Chooser
+// Khởi tạo Google Identity Services (OAuth 2.0)
 // ==========================================
 function initGoogleIdentityServices() {
-    if (window.google && window.google.accounts && window.GOOGLE_CLIENT_ID) {
+    if (typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
         try {
-            window.google.accounts.id.initialize({
-                client_id: window.GOOGLE_CLIENT_ID,
-                callback: handleGoogleCredentialResponse
+            googleTokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid",
+                prompt: "select_account",
+                callback: async (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        await performGoogleBackendAuth({ access_token: tokenResponse.access_token });
+                    } else if (tokenResponse && tokenResponse.error) {
+                        console.error("Google token error:", tokenResponse);
+                        if (tokenResponse.error !== "popup_closed_by_user") {
+                            showToast("Lỗi xác thực Google: " + tokenResponse.error, "error");
+                        }
+                    }
+                }
             });
         } catch (e) {
-            console.warn("Lỗi khởi tạo Google GIS:", e);
+            console.warn("Lỗi khởi tạo Google Token Client:", e);
         }
     }
 }
 
-// Khi người dùng bấm nút Google
+// Kích hoạt cửa sổ chọn tài khoản Google thật
 function triggerGoogleSignIn(roleTarget) {
     currentAuthRoleTarget = roleTarget || "STUDENT";
 
-    // Nếu đã cấu hình Google Client ID thật trên domain
-    if (window.google && window.google.accounts && window.GOOGLE_CLIENT_ID) {
-        try {
-            window.google.accounts.id.prompt();
-            return;
-        } catch (e) {
-            console.warn("Không thể mở Google Prompt, chuyển sang hộp thoại demo:", e);
-        }
+    // Đảm bảo client đã khởi tạo
+    if (!googleTokenClient && typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
+        initGoogleIdentityServices();
     }
 
-    // Mặc định hoặc chế độ demo: mở modal chọn tài khoản Google ICTU 1-chạm
-    openGoogleDemoModal();
+    if (googleTokenClient) {
+        // Luôn yêu cầu hiện bảng Chọn tài khoản của Google (prompt: 'select_account')
+        googleTokenClient.requestAccessToken({ prompt: "select_account" });
+    } else {
+        showToast("Đang kết nối tới máy chủ Google... Vui lòng thử lại sau 2 giây.", "info");
+        setTimeout(() => {
+            initGoogleIdentityServices();
+            if (googleTokenClient) {
+                googleTokenClient.requestAccessToken({ prompt: "select_account" });
+            } else {
+                showToast("Không thể kết nối đến Google Identity Services. Vui lòng kiểm tra lại mạng.", "error");
+            }
+        }, 1200);
+    }
 }
 
-// Khi người dùng bấm nút Microsoft
+// Nút Microsoft (Hướng dẫn sử dụng email @ms.ictu.edu.vn)
 function triggerMicrosoftSignIn(roleTarget) {
     currentAuthRoleTarget = roleTarget || "STUDENT";
-    openGoogleDemoModal();
-}
-
-// Xử lý khi nhận Google ID Token thật từ Google Identity Services
-async function handleGoogleCredentialResponse(response) {
-    if (!response || !response.credential) {
-        showToast("Không nhận được thông tin xác thực từ Google", "error");
-        return;
-    }
-
-    await performGoogleBackendAuth({ credential: response.credential });
+    showToast("Email @ms.ictu.edu.vn của trường có thể đăng nhập trực tiếp qua cổng Google hoặc dùng form Mã SV.", "info");
+    toggleStudentPasswordForm();
 }
 
 // ==========================================
-// Modal Chọn tài khoản Google Demo (1 chạm)
-// ==========================================
-function openGoogleDemoModal() {
-    const modal = document.getElementById("googleDemoModal");
-    if (modal) modal.classList.add("active");
-}
-
-function closeGoogleDemoModal() {
-    const modal = document.getElementById("googleDemoModal");
-    if (modal) modal.classList.remove("active");
-}
-
-// Khi click vào 1 tài khoản trong danh sách demo
-async function selectGoogleAccount(email, name) {
-    closeGoogleDemoModal();
-    await performGoogleBackendAuth({ email, name });
-}
-
-// Khi người dùng gõ email Google tự nhập
-async function submitCustomGoogleEmail() {
-    const input = document.getElementById("customGoogleEmailInput");
-    if (!input) return;
-    const email = input.value.trim();
-
-    if (!email || !email.includes("@")) {
-        showToast("Vui lòng nhập địa chỉ email hợp lệ (VD: dtc235180077@ictu.edu.vn)", "warning");
-        return;
-    }
-
-    closeGoogleDemoModal();
-    await performGoogleBackendAuth({ email });
-}
-
-// ==========================================
-// Gửi yêu cầu xác thực Google lên Backend
+// Gửi Access Token / Credential lên Backend
 // ==========================================
 async function performGoogleBackendAuth(payload) {
-    showToast("⏳ Đang xác thực tài khoản Google với máy chủ...", "info");
+    showToast("⏳ Đang xác thực tài khoản với máy chủ...", "info");
 
     try {
         const response = await fetch(GOOGLE_AUTH_API, {
