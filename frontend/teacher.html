@@ -128,6 +128,24 @@
                         >
                     </div>
 
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label for="proposalEvidenceFile">📎 Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</label>
+                        <input type="file" id="proposalEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'proposal')">
+                        <div id="proposalEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <span id="proposalEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
+                                    <span id="proposalEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="clearEvidenceFile('proposal')" style="padding: 2px 8px; font-size: 0.75rem;">✕ Gỡ bỏ</button>
+                            </div>
+                            <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                                <span>Mã băm SHA-256: </span>
+                                <code id="proposalEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
                         <button type="submit" id="submitProposalBtn" class="btn btn-primary" style="padding: 0.75rem 1.75rem;">
                             🚀 Gửi Đề Xuất Phê Duyệt
@@ -177,6 +195,24 @@
         </div>
 
     </main>
+
+    <!-- ==========================================
+         MODAL: MINH CHỨNG KHEN THƯỞNG & SHA-256
+         ========================================== -->
+    <div id="evidenceModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">📎 Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
+                <button class="btn-icon" onclick="closeModal('evidenceModal')">✕</button>
+            </div>
+            <div class="modal-body" id="evidenceModalBody">
+                <!-- Injected via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('evidenceModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">

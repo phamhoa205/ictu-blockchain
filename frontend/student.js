@@ -131,14 +131,36 @@ async function loadStudentRewards() {
             return;
         }
 
-        table.innerHTML = currentRewardsList.map(item => `
+        table.innerHTML = currentRewardsList.map(item => {
+            let evidenceBtn = "";
+            if (item.evidence_name || item.evidence_hash) {
+                evidenceBtn = `
+                    <div style="margin-top: 4px;">
+                        <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                            name: item.evidence_name,
+                            hash: item.evidence_hash,
+                            data: item.evidence_data,
+                            studentName: currentStudentProfile ? currentStudentProfile.name : "Sinh viên",
+                            studentId: currentStudentProfile ? currentStudentProfile.studentId : "--",
+                            reason: item.reason
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                            📎 Xem minh chứng
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
             <tr>
                 <td>
                     <span class="badge badge-token" style="font-size: 0.9rem;">
                         🪙 +${item.amount} ICTU
                     </span>
                 </td>
-                <td><strong>${item.reason || "Khen thưởng học tập"}</strong></td>
+                <td>
+                    <div><strong>${item.reason || "Khen thưởng học tập"}</strong></div>
+                    ${evidenceBtn}
+                </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 6px;">
                         <span class="mono" style="color: var(--primary); font-size: 0.85rem;">${shortAddress(item.transactionHash)}</span>
@@ -157,7 +179,8 @@ async function loadStudentRewards() {
                     </button>
                 </td>
             </tr>
-        `).join("");
+            `;
+        }).join("");
 
     } catch (error) {
         console.error("Load rewards error:", error);

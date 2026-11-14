@@ -430,11 +430,20 @@ async function handleIssueReward(event) {
     btn.innerHTML = "⏳ Đang ký giao dịch & ghi nhận vào khối...";
 
     let data = null;
+    const evidence = window.currentEvidence && window.currentEvidence.issue ? window.currentEvidence.issue : null;
+
     try {
         const response = await fetch(`${API}/issue`, {
             method: "POST",
             headers: authHeader(),
-            body: JSON.stringify({ studentId, amount: Number(amount), reason })
+            body: JSON.stringify({ 
+                studentId, 
+                amount: Number(amount), 
+                reason,
+                evidenceFileName: evidence ? evidence.fileName : null,
+                evidenceFileData: evidence ? evidence.fileData : null,
+                evidenceHash: evidence ? evidence.fileHash : null
+            })
         });
 
         data = await response.json();
@@ -494,6 +503,9 @@ function resetIssueForm() {
     if (form) form.reset();
     const previewBox = document.getElementById("studentWalletPreview");
     if (previewBox) previewBox.style.display = "none";
+    if (typeof clearEvidenceFile === "function") {
+        clearEvidenceFile("issue");
+    }
 }
 
 // Custom Balance Checker
@@ -570,7 +582,26 @@ async function loadHistory(page = 1, search = "") {
                     </tr>
                 `;
             } else {
-                table.innerHTML = records.map(r => `
+                table.innerHTML = records.map(r => {
+                    let evidenceBtn = "";
+                    if (r.evidence_name || r.evidence_hash) {
+                        evidenceBtn = `
+                            <div style="margin-top: 4px;">
+                                <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                                    name: r.evidence_name,
+                                    hash: r.evidence_hash,
+                                    data: r.evidence_data,
+                                    studentName: r.studentName,
+                                    studentId: r.studentId,
+                                    reason: r.reason
+                                }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                                    📎 Xem minh chứng
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    return `
                     <tr>
                         <td><span class="mono" style="color: var(--text-muted);">#${r.id}</span></td>
                         <td>
@@ -585,7 +616,10 @@ async function loadHistory(page = 1, search = "") {
                                 🪙 +${r.amount} ICTU
                             </span>
                         </td>
-                        <td>${r.reason || "Khen thưởng học tập"}</td>
+                        <td>
+                            <div>${r.reason || "Khen thưởng học tập"}</div>
+                            ${evidenceBtn}
+                        </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <span class="mono" style="color: var(--primary); font-size: 0.82rem;">${shortAddress(r.transactionHash)}</span>
@@ -599,7 +633,8 @@ async function loadHistory(page = 1, search = "") {
                             </button>
                         </td>
                     </tr>
-                `).join("");
+                    `;
+                }).join("");
             }
         }
 
@@ -831,6 +866,24 @@ async function loadAdminProposals() {
                 actionButtons = `<span style="font-size: 0.8rem; color: var(--text-muted);">${p.rejectReason || "Không đạt"}</span>`;
             }
 
+            let evidenceBtn = "";
+            if (p.evidence_name || p.evidence_hash) {
+                evidenceBtn = `
+                    <div style="margin-top: 4px;">
+                        <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                            name: p.evidence_name,
+                            hash: p.evidence_hash,
+                            data: p.evidence_data,
+                            studentName: p.studentName,
+                            studentId: p.studentId,
+                            reason: p.reason
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                            📎 Xem minh chứng
+                        </button>
+                    </div>
+                `;
+            }
+
             html += `
                 <tr>
                     <td class="mono">#${p.id}</td>
@@ -838,7 +891,10 @@ async function loadAdminProposals() {
                     <td><span class="mono">${p.studentId}</span></td>
                     <td><b>${p.studentName || "--"}</b></td>
                     <td><span class="badge badge-token">+${p.amount} ICTU</span></td>
-                    <td style="max-width: 250px;">${p.reason}</td>
+                    <td style="max-width: 250px;">
+                        <div>${p.reason}</div>
+                        ${evidenceBtn}
+                    </td>
                     <td>${statusBadge}</td>
                     <td>${actionButtons}</td>
                 </tr>

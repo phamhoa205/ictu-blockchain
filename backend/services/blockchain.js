@@ -458,7 +458,16 @@ async function syncTransactionsFromIBN() {
               const studentWallet = ethers.getAddress(proposal.studentWallet);
               const amount = parseRewardAmount(proposal.amount);
               const reason = proposal.reason || `Phê duyệt đề xuất #${proposalId}`;
-              const inserted = await insertRewardRecord(studentWallet, amount, reason, txHash, txDate);
+              const inserted = await insertRewardRecord(
+                studentWallet, 
+                amount, 
+                reason, 
+                txHash, 
+                txDate,
+                proposal.evidence_name || null,
+                proposal.evidence_hash || null,
+                proposal.evidence_data || null
+              );
               if (inserted) syncedCount++;
             }
           }
@@ -495,7 +504,7 @@ async function syncTransactionsFromIBN() {
 /**
  * Chèn an toàn bản ghi vào bảng rewards trong SQLite nếu chưa tồn tại
  */
-function insertRewardRecord(studentWallet, amount, reason, txHash, createdAt) {
+function insertRewardRecord(studentWallet, amount, reason, txHash, createdAt, evidenceName = null, evidenceHash = null, evidenceData = null) {
   return new Promise((resolve) => {
     if (!studentWallet || !amount || amount <= 0 || !txHash) {
       return resolve(false);
@@ -525,8 +534,8 @@ function insertRewardRecord(studentWallet, amount, reason, txHash, createdAt) {
             }
 
             db.run(
-              `INSERT INTO rewards (student, amount, reason, transactionHash, createdAt) VALUES (?, ?, ?, ?, ?)`,
-              [studentWallet, amount, reason, txHash, createdAt || new Date().toISOString()],
+              `INSERT INTO rewards (student, amount, reason, transactionHash, evidence_name, evidence_hash, evidence_data, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+              [studentWallet, amount, reason, txHash, evidenceName, evidenceHash, evidenceData, createdAt || new Date().toISOString()],
               function (iErr) {
                 if (iErr) {
                   return resolve(false);

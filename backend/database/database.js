@@ -161,6 +161,9 @@ function initTablesAndSeed(database) {
                 amount INTEGER NOT NULL,
                 reason TEXT,
                 transactionHash TEXT,
+                evidence_name TEXT,
+                evidence_hash TEXT,
+                evidence_data TEXT,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -203,6 +206,9 @@ function initTablesAndSeed(database) {
                 status TEXT DEFAULT 'PENDING',
                 transactionHash TEXT,
                 rejectReason TEXT,
+                evidence_name TEXT,
+                evidence_hash TEXT,
+                evidence_data TEXT,
                 createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -222,6 +228,12 @@ function initTablesAndSeed(database) {
 
         // 6. Safe Column Migration
         database.run(`ALTER TABLE users ADD COLUMN name TEXT`, () => {});
+        database.run(`ALTER TABLE proposals ADD COLUMN evidence_name TEXT`, () => {});
+        database.run(`ALTER TABLE proposals ADD COLUMN evidence_hash TEXT`, () => {});
+        database.run(`ALTER TABLE proposals ADD COLUMN evidence_data TEXT`, () => {});
+        database.run(`ALTER TABLE rewards ADD COLUMN evidence_name TEXT`, () => {});
+        database.run(`ALTER TABLE rewards ADD COLUMN evidence_hash TEXT`, () => {});
+        database.run(`ALTER TABLE rewards ADD COLUMN evidence_data TEXT`, () => {});
 
         // 7. Seed Whitelist Teachers
         database.run(`

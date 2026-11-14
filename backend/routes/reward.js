@@ -37,6 +37,9 @@ router.post("/issue", verifyToken, isAdmin, async (req, res) => {
 
         const cleanId = String(studentId).trim();
         const cleanReason = reason ? String(reason).trim() : "Academic Reward";
+        const evidenceName = req.body.evidenceFileName || req.body.evidence_name || null;
+        const evidenceHash = req.body.evidenceHash || req.body.evidence_hash || null;
+        const evidenceData = req.body.evidenceFileData || req.body.evidence_data || null;
 
         // Lookup student in SQLite (case-insensitive)
         db.get(
@@ -76,8 +79,8 @@ router.post("/issue", verifyToken, isAdmin, async (req, res) => {
 
                     // Record transaction in SQLite database
                     db.run(
-                        `INSERT INTO rewards (student, amount, reason, transactionHash) VALUES (?, ?, ?, ?)`,
-                        [student.wallet, numAmount, cleanReason, tx.hash],
+                        `INSERT INTO rewards (student, amount, reason, transactionHash, evidence_name, evidence_hash, evidence_data) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                        [student.wallet, numAmount, cleanReason, tx.hash, evidenceName, evidenceHash, evidenceData],
                         function (dbInsertErr) {
                             if (dbInsertErr) {
                                 console.error("Database insert warning:", dbInsertErr.message);
@@ -92,6 +95,8 @@ router.post("/issue", verifyToken, isAdmin, async (req, res) => {
                                 wallet: student.wallet,
                                 amount: numAmount,
                                 reason: cleanReason,
+                                evidence_name: evidenceName,
+                                evidence_hash: evidenceHash,
                                 transaction: tx.hash,
                                 blockNumber: receipt.blockNumber,
                                 gasUsed: receipt.gasUsed ? receipt.gasUsed.toString() : null
@@ -213,7 +218,7 @@ router.get("/my-history", verifyToken, isStudent, (req, res) => {
             }
 
             db.all(
-                `SELECT r.id, r.student, r.amount, r.reason, r.transactionHash, r.createdAt
+                `SELECT r.id, r.student, r.amount, r.reason, r.transactionHash, r.evidence_name, r.evidence_hash, r.evidence_data, r.createdAt
                  FROM rewards r
                  WHERE LOWER(r.student) = LOWER(?)
                  ORDER BY r.id DESC`,
@@ -246,6 +251,9 @@ router.get("/history", verifyToken, isAdmin, (req, res) => {
             r.amount, 
             r.reason, 
             r.transactionHash, 
+            r.evidence_name,
+            r.evidence_hash,
+            r.evidence_data,
             r.createdAt,
             s.studentId,
             s.name AS studentName
@@ -432,6 +440,9 @@ router.post("/proposals", verifyToken, isTeacherOrAdmin, (req, res) => {
 
             const teacherUsername = req.user.username;
             const teacherName = req.user.name || req.user.username;
+            const evidenceName = req.body.evidenceFileName || req.body.evidence_name || null;
+            const evidenceHash = req.body.evidenceHash || req.body.evidence_hash || null;
+            const evidenceData = req.body.evidenceFileData || req.body.evidence_data || null;
 
             let cleanWallet = student.wallet;
             try {
@@ -441,9 +452,9 @@ router.post("/proposals", verifyToken, isTeacherOrAdmin, (req, res) => {
             }
 
             db.run(
-                `INSERT INTO proposals (teacherUsername, teacherName, studentId, studentName, studentWallet, amount, reason, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
-                [teacherUsername, teacherName, student.studentId, student.name, cleanWallet, numAmount, cleanReason],
+                `INSERT INTO proposals (teacherUsername, teacherName, studentId, studentName, studentWallet, amount, reason, status, evidence_name, evidence_hash, evidence_data)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)`,
+                [teacherUsername, teacherName, student.studentId, student.name, cleanWallet, numAmount, cleanReason, evidenceName, evidenceHash, evidenceData],
                 function (insErr) {
                     if (insErr) {
                         return res.status(500).json({ error: "Lỗi lưu đề xuất: " + insErr.message });
@@ -461,6 +472,8 @@ router.post("/proposals", verifyToken, isTeacherOrAdmin, (req, res) => {
                             studentWallet: cleanWallet,
                             amount: numAmount,
                             reason: cleanReason,
+                            evidence_name: evidenceName,
+                            evidence_hash: evidenceHash,
                             status: "PENDING"
                         }
                     });
@@ -529,10 +542,10 @@ router.post("/proposals/:id/approve", verifyToken, isAdmin, async (req, res) => 
 
                 const receipt = await tx.wait();
 
-                // Save to rewards table
+                // Save to rewards table (including evidence copied from proposal)
                 db.run(
-                    `INSERT INTO rewards (student, amount, reason, transactionHash) VALUES (?, ?, ?, ?)`,
-                    [targetWallet, proposal.amount, proposal.reason, tx.hash],
+                    `INSERT INTO rewards (student, amount, reason, transactionHash, evidence_name, evidence_hash, evidence_data) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    [targetWallet, proposal.amount, proposal.reason, tx.hash, proposal.evidence_name || null, proposal.evidence_hash || null, proposal.evidence_data || null],
                     function (insertRewardErr) {
                         if (insertRewardErr) {
                             console.error("Warning insert reward:", insertRewardErr.message);

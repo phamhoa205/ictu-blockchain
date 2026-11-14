@@ -199,6 +199,22 @@
     <!-- Hidden input for raw wallet -->
     <input type="hidden" id="walletRaw">
 
+    <!-- Modal: Xem Minh Chứng & SHA-256 -->
+    <div id="evidenceModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">📎 Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
+                <button class="btn-icon" onclick="closeModal('evidenceModal')">✕</button>
+            </div>
+            <div class="modal-body" id="evidenceModalBody">
+                <!-- JavaScript Injected -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('evidenceModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <p>Hệ thống Khen thưởng Blockchain Sinh viên ICTU • Đại học Thái Nguyên</p>

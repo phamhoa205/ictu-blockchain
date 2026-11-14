@@ -225,6 +225,24 @@
                                 <label for="issueReason">Lý do / Danh mục Khen thưởng *</label>
                                 <input type="text" id="issueReason" class="form-control" placeholder="VD: Giải Nhất NCKH Cấp Khoa, Sinh viên Xuất sắc Học kỳ I..." required>
                             </div>
+
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="issueEvidenceFile">📎 Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</label>
+                                <input type="file" id="issueEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'issue')">
+                                <div id="issueEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                        <div>
+                                            <span id="issueEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
+                                            <span id="issueEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
+                                        </div>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearEvidenceFile('issue')" style="padding: 2px 8px; font-size: 0.75rem;">✕ Gỡ bỏ</button>
+                                    </div>
+                                    <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                                        <span>Mã băm SHA-256: </span>
+                                        <code id="issueEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Preview Student Wallet & Current Balance -->
@@ -578,6 +596,24 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('txReceiptModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL: MINH CHỨNG KHEN THƯỞNG & SHA-256
+         ========================================== -->
+    <div id="evidenceModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 650px;">
+            <div class="modal-header">
+                <h3 style="font-size: 1.15rem; font-weight: 700;">📎 Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
+                <button class="btn-icon" onclick="closeModal('evidenceModal')">✕</button>
+            </div>
+            <div class="modal-body" id="evidenceModalBody">
+                <!-- Injected via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('evidenceModal')">Đóng</button>
             </div>
         </div>
     </div>

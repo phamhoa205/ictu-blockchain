@@ -119,11 +119,20 @@ async function handleProposalSubmit(event) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = "⏳ Đang gửi đề xuất...";
 
+    const evidence = window.currentEvidence && window.currentEvidence.proposal ? window.currentEvidence.proposal : null;
+
     try {
         const response = await fetch(`${REWARD_API}/proposals`, {
             method: "POST",
             headers: authHeader(),
-            body: JSON.stringify({ studentId, amount, reason })
+            body: JSON.stringify({ 
+                studentId, 
+                amount, 
+                reason,
+                evidenceFileName: evidence ? evidence.fileName : null,
+                evidenceFileData: evidence ? evidence.fileData : null,
+                evidenceHash: evidence ? evidence.fileHash : null
+            })
         });
 
         const data = await response.json();
@@ -140,6 +149,9 @@ async function handleProposalSubmit(event) {
         reasonInput.value = "";
         select.value = "";
         handleStudentSelectChange();
+        if (typeof clearEvidenceFile === "function") {
+            clearEvidenceFile("proposal");
+        }
 
         await loadMyProposals();
 
@@ -206,13 +218,34 @@ async function loadMyProposals() {
                 `;
             }
 
+            let evidenceBtn = "";
+            if (p.evidence_name || p.evidence_hash) {
+                evidenceBtn = `
+                    <div style="margin-top: 4px;">
+                        <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                            name: p.evidence_name,
+                            hash: p.evidence_hash,
+                            data: p.evidence_data,
+                            studentName: p.studentName,
+                            studentId: p.studentId,
+                            reason: p.reason
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                            📎 Xem minh chứng
+                        </button>
+                    </div>
+                `;
+            }
+
             html += `
                 <tr>
                     <td class="mono">#${p.id}</td>
                     <td><strong>${p.studentId}</strong></td>
                     <td>${p.studentName || "--"}</td>
                     <td><span class="badge badge-token">+${p.amount} ICTU</span></td>
-                    <td style="max-width: 250px;">${p.reason}</td>
+                    <td style="max-width: 250px;">
+                        <div>${p.reason}</div>
+                        ${evidenceBtn}
+                    </td>
                     <td>${statusBadge}</td>
                     <td>${txDisplay}</td>
                     <td style="font-size: 0.82rem; color: var(--text-muted);">${formatDate(p.createdAt)}</td>
