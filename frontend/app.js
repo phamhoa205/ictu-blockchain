@@ -45,7 +45,7 @@ async function initApp() {
 // Tab Switching
 // ==========================================
 function switchTab(tabId) {
-    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelectorAll(".tab-btn, .sidebar-nav-item").forEach(btn => btn.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
 
     const targetTab = document.getElementById(`tab-${tabId}`);
@@ -54,12 +54,31 @@ function switchTab(tabId) {
     }
 
     // Mark matching tab button as active
-    const buttons = document.querySelectorAll(".tab-btn");
+    const buttons = document.querySelectorAll(".tab-btn, .sidebar-nav-item");
     buttons.forEach(btn => {
-        if (btn.getAttribute("onclick") && btn.getAttribute("onclick").includes(tabId)) {
+        const onclickAttr = btn.getAttribute("onclick") || "";
+        if (onclickAttr.includes(`'${tabId}'`) || onclickAttr.includes(`"${tabId}"`)) {
             btn.classList.add("active");
         }
     });
+
+    // Update Topbar Title
+    const titles = {
+        dashboard: "Tổng quan & Điều hành",
+        proposals: "Phê duyệt Đề xuất Khen thưởng",
+        issue: "Cấp thưởng Token Trực tiếp",
+        history: "Lịch sử Giao dịch & Đối soát IBN",
+        students: "Quản lý Sinh viên",
+        leaderboard: "Bảng xếp hạng Sinh viên Xuất sắc",
+        whitelist: "Danh sách Giảng viên (SSO)"
+    };
+    const titleEl = document.getElementById("currentSectionTitle");
+    if (titleEl && titles[tabId]) {
+        titleEl.textContent = titles[tabId];
+    }
+
+    // Auto-close mobile sidebar if open
+    closeMobileSidebar();
 
     // Refresh tab-specific data
     if (tabId === "history") {
@@ -74,7 +93,23 @@ function switchTab(tabId) {
         loadWhitelistTable();
     } else if (tabId === "dashboard") {
         loadStats();
+        loadAdminProposals();
     }
+}
+
+// Mobile Sidebar Helpers
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.toggle("open");
+    if (overlay) overlay.classList.toggle("active");
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.remove("open");
+    if (overlay) overlay.classList.remove("active");
 }
 
 // ==========================================
@@ -91,10 +126,18 @@ async function checkBlockchainHealth() {
         const data = await response.json();
 
         if (data.blockchain && data.blockchain.connected) {
-            statusBadge.style.borderColor = "rgba(34, 197, 94, 0.4)";
-            statusText.innerHTML = `🟢 Hardhat Node (Khối #${data.blockchain.blockNumber})`;
-            if (blockEl) blockEl.textContent = `#${data.blockchain.blockNumber}`;
-            if (chainEl) chainEl.textContent = `Chain ID: ${data.blockchain.chainId} • RPC Sẵn sàng`;
+            const chainId = data.blockchain.chainId || 2025;
+            const blockNum = data.blockchain.blockNumber ? `#${data.blockchain.blockNumber}` : "IBN-2025";
+
+            if (statusBadge) {
+                statusBadge.classList.remove("status-disconnected");
+                statusBadge.classList.add("status-connected");
+            }
+            if (statusText) {
+                statusText.textContent = `IBN Production • Chain ID: ${chainId}`;
+            }
+            if (blockEl) blockEl.textContent = blockNum;
+            if (chainEl) chainEl.textContent = `Chain ID: ${chainId} • IBN Gateway`;
 
             currentContractAddresses.token = data.blockchain.tokenAddress || "";
             currentContractAddresses.manager = data.blockchain.managerAddress || "";
@@ -104,11 +147,19 @@ async function checkBlockchainHealth() {
             if (tokenAddrEl) tokenAddrEl.textContent = shortAddress(currentContractAddresses.token);
             if (managerAddrEl) managerAddrEl.textContent = shortAddress(currentContractAddresses.manager);
         } else {
-            statusBadge.style.borderColor = "rgba(239, 68, 68, 0.4)";
-            statusText.innerHTML = `🔴 RPC Offline (${data.blockchain ? data.blockchain.error : "Không thể kết nối"})`;
+            if (statusBadge) {
+                statusBadge.classList.remove("status-connected");
+                statusBadge.classList.add("status-disconnected");
+            }
+            if (statusText) statusText.textContent = `IBN Offline (${data.blockchain ? data.blockchain.error || "Mất kết nối" : "Mất kết nối"})`;
+            if (blockEl) blockEl.textContent = "Offline";
         }
     } catch (err) {
-        if (statusText) statusText.innerHTML = "🔴 Mất kết nối Backend (Port 3000)";
+        if (statusBadge) {
+            statusBadge.classList.remove("status-connected");
+            statusBadge.classList.add("status-disconnected");
+        }
+        if (statusText) statusText.textContent = "Offline (Lỗi kết nối Backend)";
     }
 }
 
@@ -198,23 +249,25 @@ async function loadStudents(search = "") {
                     <td>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span class="mono">${shortAddress(s.wallet)}</span>
-                            <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${s.wallet}', 'Địa chỉ ví')" title="Sao chép ví">📋</button>
+                            <button class="btn-copy-icon" onclick="copyToClipboard('${s.wallet}', 'Địa chỉ ví')" title="Sao chép ví">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
                         </div>
                     </td>
                     <td>${s.email || "<span style='color: var(--text-muted)'>Chưa có</span>"}</td>
                     <td>
-                        <span class="badge badge-token">🪙 ${s.totalEarned || 0} ICTU</span>
+                        <span class="badge badge-token">${s.totalEarned || 0} ICTU</span>
                     </td>
                     <td>
                         <div style="display: flex; gap: 6px;">
-                            <button class="btn btn-primary btn-sm" onclick="quickRewardStudent('${s.studentId}')" title="Trao thưởng nhanh">
-                                🎁 Thưởng
+                            <button class="btn btn-primary btn-xs" onclick="quickRewardStudent('${s.studentId}')" title="Trao thưởng nhanh">
+                                Thưởng
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="openEditStudentModal('${s.studentId}')" title="Chỉnh sửa thông tin">
-                                ✏️ Sửa
+                            <button class="btn btn-secondary btn-xs" onclick="openEditStudentModal('${s.studentId}')" title="Chỉnh sửa thông tin">
+                                Sửa
                             </button>
-                            <button class="btn btn-danger btn-sm" onclick="handleDeleteStudent('${s.studentId}', '${s.name}')" title="Xóa sinh viên">
-                                🗑️
+                            <button class="btn btn-outline-danger btn-xs" onclick="handleDeleteStudent('${s.studentId}', '${s.name}')" title="Xóa sinh viên">
+                                Xóa
                             </button>
                         </div>
                     </td>
@@ -572,6 +625,35 @@ async function loadHistory(page = 1, search = "") {
         const total = result.total || 0;
         historyTotalPages = result.totalPages || 1;
 
+        // Render Recent Transactions on Dashboard (Top 3)
+        const dashTxList = document.getElementById("dashboardRecentTxList");
+        if (dashTxList) {
+            if (records.length === 0) {
+                dashTxList.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 1.25rem; font-size: 0.82rem;">Chưa có giao dịch on-chain nào.</div>`;
+            } else {
+                dashTxList.innerHTML = records.slice(0, 3).map(r => `
+                    <div class="recent-tx-item">
+                        <div class="recent-tx-row-top">
+                            <span class="badge badge-token">+${r.amount} ICTU</span>
+                            <span class="recent-tx-time">${formatDate(r.createdAt)}</span>
+                        </div>
+                        <div class="recent-tx-student">
+                            <b>${r.studentName || "Sinh viên"}</b>
+                            ${r.studentId ? `<span class="mono" style="font-size: 0.78rem; color: var(--text-muted);">(${r.studentId})</span>` : ""}
+                        </div>
+                        <div class="recent-tx-hash-row">
+                            <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer">
+                                ${shortAddress(r.transactionHash)} ↗
+                            </a>
+                            <button class="btn-copy-icon" onclick="copyToClipboard('${r.transactionHash}', 'Mã Tx Hash')" title="Sao chép Tx Hash">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join("");
+            }
+        }
+
         if (table) {
             if (records.length === 0) {
                 table.innerHTML = `
@@ -587,14 +669,14 @@ async function loadHistory(page = 1, search = "") {
                     if (r.evidence_name || r.evidence_hash) {
                         evidenceBtn = `
                             <div style="margin-top: 4px;">
-                                <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                                <button class="btn btn-secondary btn-xs" onclick="viewEvidence(${JSON.stringify({
                                     name: r.evidence_name,
                                     hash: r.evidence_hash,
                                     data: r.evidence_data,
                                     studentName: r.studentName,
                                     studentId: r.studentId,
                                     reason: r.reason
-                                }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                                }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem;">
                                     📎 Xem minh chứng
                                 </button>
                             </div>
@@ -612,8 +694,8 @@ async function loadHistory(page = 1, search = "") {
                             </div>
                         </td>
                         <td>
-                            <span class="badge badge-token" style="font-size: 0.85rem;">
-                                🪙 +${r.amount} ICTU
+                            <span class="badge badge-token">
+                                +${r.amount} ICTU
                             </span>
                         </td>
                         <td>
@@ -622,14 +704,16 @@ async function loadHistory(page = 1, search = "") {
                         </td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 6px;">
-                                <span class="mono" style="color: var(--primary); font-size: 0.82rem;">${shortAddress(r.transactionHash)}</span>
-                                <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${r.transactionHash}', 'Mã Tx Hash')" title="Sao chép Tx Hash">📋</button>
+                                <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer">${shortAddress(r.transactionHash)} ↗</a>
+                                <button class="btn-copy-icon" onclick="copyToClipboard('${r.transactionHash}', 'Mã Tx Hash')" title="Sao chép Tx Hash">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
                             </div>
                         </td>
                         <td style="font-size: 0.82rem; color: var(--text-secondary);">${formatDate(r.createdAt)}</td>
                         <td>
-                            <button class="btn btn-secondary btn-sm" onclick="viewHistoryItemDetails(${JSON.stringify(r).replace(/"/g, '&quot;')})">
-                                🔍 Xem
+                            <button class="btn btn-secondary btn-xs" onclick="viewHistoryItemDetails(${JSON.stringify(r).replace(/"/g, '&quot;')})">
+                                Chi tiết
                             </button>
                         </td>
                     </tr>
@@ -705,21 +789,28 @@ async function loadLeaderboard() {
 
         table.innerHTML = list.map((item, index) => {
             const rank = index + 1;
-            let rankBadge = `<span class="badge">${rank}</span>`;
-            if (rank === 1) rankBadge = `<span class="badge badge-rank-1">🥇 Hạng 1</span>`;
-            else if (rank === 2) rankBadge = `<span class="badge badge-rank-2">🥈 Hạng 2</span>`;
-            else if (rank === 3) rankBadge = `<span class="badge badge-rank-3">🥉 Hạng 3</span>`;
+            let rankBadge = `<span class="rank-badge">${rank}</span>`;
+            if (rank === 1) rankBadge = `<span class="rank-badge rank-1">#1</span>`;
+            else if (rank === 2) rankBadge = `<span class="rank-badge rank-2">#2</span>`;
+            else if (rank === 3) rankBadge = `<span class="rank-badge rank-3">#3</span>`;
 
             return `
                 <tr>
                     <td>${rankBadge}</td>
                     <td><strong class="mono" style="color: var(--primary);">${item.studentId || "--"}</strong></td>
                     <td><strong>${item.name}</strong></td>
-                    <td><span class="mono">${shortAddress(item.wallet)}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span class="mono">${shortAddress(item.wallet)}</span>
+                            <button class="btn-copy-icon" onclick="copyToClipboard('${item.wallet}', 'Địa chỉ ví')" title="Sao chép ví">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                        </div>
+                    </td>
                     <td>${item.rewardCount} lượt</td>
                     <td>
-                        <span class="badge badge-token" style="font-size: 0.9rem;">
-                            🪙 ${Number(item.totalReward).toLocaleString()} ICTU
+                        <span class="badge badge-token">
+                            +${Number(item.totalReward).toLocaleString()} ICTU
                         </span>
                     </td>
                 </tr>
@@ -818,8 +909,12 @@ async function loadAdminProposals() {
         currentAdminProposals = proposals;
 
         let pendingCount = 0;
+        const pendingList = [];
         proposals.forEach(p => {
-            if (p.status === "PENDING") pendingCount++;
+            if (p.status === "PENDING") {
+                pendingCount++;
+                pendingList.push(p);
+            }
         });
 
         if (badge) {
@@ -828,6 +923,57 @@ async function loadAdminProposals() {
                 badge.style.display = "inline-block";
             } else {
                 badge.style.display = "none";
+            }
+        }
+
+        const kpiPendingEl = document.getElementById("kpiPendingProposals");
+        if (kpiPendingEl) {
+            kpiPendingEl.textContent = pendingCount;
+        }
+
+        // Render Dashboard Pending Proposals (Top 5 PENDING)
+        const dashTbody = document.getElementById("dashboardPendingProposalsTableBody");
+        if (dashTbody) {
+            if (pendingList.length === 0) {
+                dashTbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.75rem;">Hiện không có đề xuất nào đang chờ phê duyệt.</td></tr>`;
+            } else {
+                dashTbody.innerHTML = pendingList.slice(0, 5).map(p => {
+                    let evBtn = "";
+                    if (p.evidence_name || p.evidence_hash) {
+                        evBtn = `
+                            <div style="margin-top: 2px;">
+                                <button class="btn-link-xs" onclick="viewEvidence(${JSON.stringify({
+                                    name: p.evidence_name,
+                                    hash: p.evidence_hash,
+                                    data: p.evidence_data,
+                                    studentName: p.studentName,
+                                    studentId: p.studentId,
+                                    reason: p.reason
+                                }).replace(/"/g, '&quot;')})">📎 Minh chứng</button>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <tr>
+                            <td><b>${p.teacherName || p.teacherUsername}</b></td>
+                            <td>
+                                <div><b>${p.studentName || "--"}</b></div>
+                                <span class="mono" style="font-size: 0.75rem; color: var(--text-muted);">${p.studentId}</span>
+                            </td>
+                            <td><span class="badge badge-token">+${p.amount} ICTU</span></td>
+                            <td style="max-width: 180px;">
+                                <div style="font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.reason}">${p.reason}</div>
+                                ${evBtn}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn btn-primary btn-xs" onclick="approveProposal(${p.id})">Ký On-chain</button>
+                                    <button class="btn btn-outline-danger btn-xs" onclick="rejectProposal(${p.id})">Từ chối</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }).join("");
             }
         }
 
@@ -842,27 +988,29 @@ async function loadAdminProposals() {
             let actionButtons = "";
 
             if (p.status === "PENDING") {
-                statusBadge = `<span class="badge" style="background: #fef3c7; color: #b45309; font-weight: 600;">⏳ Chờ duyệt</span>`;
+                statusBadge = `<span class="badge badge-warning">Chờ duyệt</span>`;
                 actionButtons = `
                     <div style="display: flex; gap: 6px;">
-                        <button class="btn btn-primary btn-sm" onclick="approveProposal(${p.id})" style="background: #10b981; border-color: #10b981; padding: 4px 8px; font-size: 0.8rem;">
-                            ✅ Ký Blockchain
+                        <button class="btn btn-primary btn-xs" onclick="approveProposal(${p.id})">
+                            Ký On-chain
                         </button>
-                        <button class="btn btn-secondary btn-sm" onclick="rejectProposal(${p.id})" style="color: #ef4444; border-color: #fca5a5; padding: 4px 8px; font-size: 0.8rem;">
-                            ❌ Từ chối
+                        <button class="btn btn-outline-danger btn-xs" onclick="rejectProposal(${p.id})">
+                            Từ chối
                         </button>
                     </div>
                 `;
             } else if (p.status === "APPROVED") {
-                statusBadge = `<span class="badge" style="background: #d1fae5; color: #065f46; font-weight: 600;">✅ Đã ký On-chain</span>`;
+                statusBadge = `<span class="badge badge-success">Đã ký On-chain</span>`;
                 actionButtons = `
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                        <span class="mono" style="color: var(--primary); font-size: 0.8rem;">${shortAddress(p.transactionHash)}</span>
-                        <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${p.transactionHash}', 'Mã Tx')">📋</button>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer">${shortAddress(p.transactionHash)} ↗</a>
+                        <button class="btn-copy-icon" onclick="copyToClipboard('${p.transactionHash}', 'Mã Tx')" title="Sao chép Tx">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
                     </div>
                 `;
             } else {
-                statusBadge = `<span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 600;">❌ Đã từ chối</span>`;
+                statusBadge = `<span class="badge badge-danger">Đã từ chối</span>`;
                 actionButtons = `<span style="font-size: 0.8rem; color: var(--text-muted);">${p.rejectReason || "Không đạt"}</span>`;
             }
 
@@ -870,14 +1018,14 @@ async function loadAdminProposals() {
             if (p.evidence_name || p.evidence_hash) {
                 evidenceBtn = `
                     <div style="margin-top: 4px;">
-                        <button class="btn btn-secondary btn-sm" onclick="viewEvidence(${JSON.stringify({
+                        <button class="btn btn-secondary btn-xs" onclick="viewEvidence(${JSON.stringify({
                             name: p.evidence_name,
                             hash: p.evidence_hash,
                             data: p.evidence_data,
                             studentName: p.studentName,
                             studentId: p.studentId,
                             reason: p.reason
-                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem;">
                             📎 Xem minh chứng
                         </button>
                     </div>
@@ -1034,14 +1182,14 @@ async function loadWhitelistTable() {
                     <td><code class="mono" style="color: var(--primary);">${item.email}</code></td>
                     <td>${item.department || "Khoa CNTT"}</td>
                     <td>
-                        <span class="badge" style="background: #d1fae5; color: #065f46; font-weight: 600;">
-                            🟢 Được phép SSO
+                        <span class="badge badge-success">
+                            Được phép SSO
                         </span>
                     </td>
                     <td style="font-size: 0.82rem; color: var(--text-muted);">${formatDate(item.createdAt)}</td>
                     <td>
-                        <button class="btn btn-secondary btn-sm" onclick="deleteWhitelist(${item.id}, '${item.email}')" style="color: #ef4444; border-color: #fca5a5; padding: 4px 8px; font-size: 0.8rem;">
-                            🗑️ Thu hồi
+                        <button class="btn btn-outline-danger btn-xs" onclick="deleteWhitelist(${item.id}, '${item.email}')">
+                            Thu hồi
                         </button>
                     </td>
                 </tr>

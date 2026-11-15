@@ -6,503 +6,710 @@
     <title>Quản trị | ICTU Blockchain Reward System</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="admin-body">
 
-    <!-- ==========================================
-         Top Navigation Bar
-         ========================================== -->
-    <header class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="brand">
-                <div class="brand-logo">🎓</div>
-                <div class="brand-text">
-                    <h1>ICTU Reward System</h1>
-                    <span>Trang Quản trị Hệ thống Blockchain</span>
+    <div class="admin-layout">
+
+        <!-- ==========================================
+             1. FIXED LEFT SIDEBAR (250px)
+             ========================================== -->
+        <aside id="adminSidebar" class="admin-sidebar">
+            <!-- Sidebar Brand Header -->
+            <div class="sidebar-brand-box">
+                <img src="./ictu-logo.png" alt="Logo ICTU" class="sidebar-logo">
+                <div class="sidebar-brand-text">
+                    <span class="sidebar-brand-title">ICTU REWARD</span>
+                    <span class="sidebar-brand-subtitle">Blockchain Admin Portal</span>
                 </div>
-            </a>
-
-            <div class="nav-status" id="blockchainStatusBadge">
-                <span class="status-dot"></span>
-                <span id="blockchainStatusText">Đang kiểm tra kết nối...</span>
             </div>
 
-            <div class="nav-user">
-                <div class="user-badge">
-                    <div class="user-avatar" id="userAvatar">A</div>
-                    <div class="user-info">
-                        <span class="user-name" id="adminName">Admin</span>
-                        <span class="user-role-tag">HỆ THỐNG</span>
-                    </div>
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="logout()">
-                    🚪 Đăng xuất
+            <!-- Sidebar Navigation Menu -->
+            <nav class="sidebar-menu">
+                <!-- Group 1: NGHIỆP VỤ CHÍNH -->
+                <div class="sidebar-group-title">Nghiệp vụ chính</div>
+
+                <button class="sidebar-nav-item tab-btn active" onclick="switchTab('dashboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>Tổng quan & Điều hành</span>
+                </button>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('proposals')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>Phê duyệt Đề xuất</span>
+                    <span id="pendingProposalsBadge" class="sidebar-badge" style="display: none;">0</span>
+                </button>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('issue')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span>Cấp thưởng Trực tiếp</span>
+                </button>
+
+                <!-- Group 2: DỮ LIỆU & ĐỐI SOÁT -->
+                <div class="sidebar-group-title">Dữ liệu & Đối soát</div>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('history')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>Lịch sử Giao dịch IBN</span>
+                </button>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('students')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>Quản lý Sinh viên</span>
+                </button>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('leaderboard')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span>Bảng xếp hạng</span>
+                </button>
+
+                <button class="sidebar-nav-item tab-btn" onclick="switchTab('whitelist')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Danh sách Giảng viên</span>
+                </button>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="sidebar-external-link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Mở Cổng IBN Explorer ↗</span>
+                </a>
+                <button type="button" onclick="promptConfigApiUrl()" class="sidebar-server-btn">
+                    <span>⚙️ Máy chủ: <code id="displayApiBase" style="color: #93c5fd;"></code></span>
                 </button>
             </div>
-        </div>
-    </header>
+        </aside>
 
-    <!-- ==========================================
-         Navigation Tabs
-         ========================================== -->
-    <nav class="tabs-bar">
-        <button class="tab-btn active" onclick="switchTab('dashboard')">
-            📊 Tổng quan & Thống kê
-        </button>
-        <button class="tab-btn" onclick="switchTab('proposals')">
-            📋 Đề xuất từ Giảng viên <span id="pendingProposalsBadge" class="badge" style="background: #ef4444; color: #fff; font-size: 0.72rem; padding: 2px 6px; border-radius: 999px; margin-left: 4px; display: none;">0</span>
-        </button>
-        <button class="tab-btn" onclick="switchTab('issue')">
-            🎁 Trao thưởng Trực tiếp
-        </button>
-        <button class="tab-btn" onclick="switchTab('students')">
-            👨‍🎓 Quản lý Sinh viên
-        </button>
-        <button class="tab-btn" onclick="switchTab('history')">
-            📜 Lịch sử Trao thưởng
-        </button>
-        <button class="tab-btn" onclick="switchTab('leaderboard')">
-            🏆 Bảng xếp hạng Top 10
-        </button>
-        <button class="tab-btn" onclick="switchTab('whitelist')">
-            🛡️ Whitelist Giảng viên (SSO)
-        </button>
-    </nav>
-
-    <!-- ==========================================
-         Main Wrapper
-         ========================================== -->
-    <main class="main-wrapper">
+        <!-- Backdrop overlay for mobile menu -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
         <!-- ==========================================
-             TAB 1: DASHBOARD
+             2. MAIN COLUMN CONTENT
              ========================================== -->
-        <section id="tab-dashboard" class="tab-content active">
-            <!-- Metrics Grid -->
-            <div class="metrics-grid">
-                <div class="metric-card card-students">
-                    <div class="metric-icon">👨‍🎓</div>
-                    <div class="metric-details">
-                        <div class="metric-title">Tổng số sinh viên</div>
-                        <div class="metric-value" id="statTotalStudents">0</div>
-                        <div class="metric-sub" id="statRewardedStudents">0 sinh viên đã nhận thưởng</div>
-                    </div>
+        <div class="admin-main">
+
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle-btn" onclick="toggleMobileSidebar()" aria-label="Mở Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="topbar-title" id="currentSectionTitle">Tổng quan & Điều hành</h1>
                 </div>
 
-                <div class="metric-card card-rewards">
-                    <div class="metric-icon">🏆</div>
-                    <div class="metric-details">
-                        <div class="metric-title">Tổng lượt trao thưởng</div>
-                        <div class="metric-value" id="statTotalRewards">0</div>
-                        <div class="metric-sub">Được xác thực trên Smart Contract</div>
+                <div class="topbar-right">
+                    <!-- Network Status Badge -->
+                    <div class="network-badge status-connected" id="blockchainStatusBadge">
+                        <span class="status-pulse-dot"></span>
+                        <span id="blockchainStatusText">Đang kiểm tra kết nối...</span>
                     </div>
-                </div>
 
-                <div class="metric-card card-tokens">
-                    <div class="metric-icon">🪙</div>
-                    <div class="metric-details">
-                        <div class="metric-title">Tổng Token đã phát hành</div>
-                        <div class="metric-value" id="statTotalTokens">0</div>
-                        <div class="metric-sub">Đơn vị: ICTU Token (ERC-20)</div>
+                    <!-- User Account Badge -->
+                    <div class="topbar-user-wrap">
+                        <div class="user-avatar-circle" id="userAvatar">A</div>
+                        <div class="user-text-info">
+                            <span class="user-display-name" id="adminName">Admin</span>
+                            <span class="user-display-role">Ban Quản trị</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="metric-card card-blocks">
-                    <div class="metric-icon">⛓️</div>
-                    <div class="metric-details">
-                        <div class="metric-title">Khối Blockchain hiện tại</div>
-                        <div class="metric-value" id="statCurrentBlock">#0</div>
-                        <div class="metric-sub" id="statChainId">Hardhat Local (Chain 31337)</div>
-                    </div>
+                    <!-- Logout Button -->
+                    <button class="btn-topbar-logout" onclick="logout()" title="Đăng xuất khỏi hệ thống">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Đăng xuất</span>
+                    </button>
                 </div>
-            </div>
+            </header>
 
-            <!-- Quick Action & Contract Info Panel -->
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>⚙️ Thông tin Hợp đồng Thông minh (Smart Contracts)</h2>
-                    </div>
-                    <div class="panel-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="checkBlockchainHealth()">
-                            🔄 Làm mới trạng thái
-                        </button>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-                        <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
-                            <h4 style="margin-bottom: 8px; color: var(--primary);">📄 RewardToken (ERC-20)</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Quản lý mint token, kiểm tra số dư và phân quyền MINTER_ROLE</p>
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                                <code class="mono" id="contractTokenAddress">0x5FbDB...80aa3</code>
-                                <button class="btn btn-icon btn-sm" onclick="copyToClipboard(currentContractAddresses.token, 'Địa chỉ Token')">📋</button>
+            <!-- Main Workspace Content -->
+            <main class="admin-content-area">
+
+                <!-- ==========================================
+                     TAB 1: TỔNG QUAN & ĐIỀU HÀNH
+                     ========================================== -->
+                <section id="tab-dashboard" class="tab-content active">
+                    <!-- Hàng 1: 4 Thẻ chỉ số KPI Tinh gọn -->
+                    <div class="metrics-grid">
+                        <!-- KPI 1: Tổng Token phát hành -->
+                        <div class="metric-card card-tokens">
+                            <div class="metric-details">
+                                <div class="metric-title">Tổng Token đã phát hành</div>
+                                <div style="display: flex; align-items: baseline; gap: 6px;">
+                                    <div class="metric-value" id="statTotalTokens">0</div>
+                                    <span style="font-size: 0.82rem; font-weight: 700; color: var(--primary);">ICTU</span>
+                                </div>
+                                <div class="metric-sub">Hợp đồng ERC-20 trên mạng IBN</div>
                             </div>
                         </div>
 
-                        <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
-                            <h4 style="margin-bottom: 8px; color: var(--accent);">🏛️ RewardManager</h4>
-                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Điều phối cấp phát thưởng, phát sự kiện RewardIssued và kiểm soát quyền Admin</p>
-                            <div style="display: flex; align-items: center; justify-content: space-between; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);">
-                                <code class="mono" id="contractManagerAddress">0xe7f17...F0512</code>
-                                <button class="btn btn-icon btn-sm" onclick="copyToClipboard(currentContractAddresses.manager, 'Địa chỉ Manager')">📋</button>
+                        <!-- KPI 2: Đề xuất chờ ký duyệt -->
+                        <div class="metric-card card-rewards" style="border-left: 4px solid #b45309;">
+                            <div class="metric-details">
+                                <div class="metric-title">Đề xuất chờ ký duyệt</div>
+                                <div style="display: flex; align-items: baseline; gap: 6px;">
+                                    <div class="metric-value" id="kpiPendingProposals" style="color: #b45309;">0</div>
+                                    <span style="font-size: 0.82rem; font-weight: 700; color: #b45309;">đề xuất</span>
+                                </div>
+                                <div class="metric-sub" style="color: #b45309; font-weight: 600;">Cần Ban Quản trị xác thực on-chain</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 3: Tổng giao dịch On-chain -->
+                        <div class="metric-card card-students" style="border-left: 4px solid #15803d;">
+                            <div class="metric-details">
+                                <div class="metric-title">Tổng giao dịch On-chain</div>
+                                <div style="display: flex; align-items: baseline; gap: 6px;">
+                                    <div class="metric-value" id="statTotalRewards" style="color: #15803d;">0</div>
+                                    <span style="font-size: 0.82rem; font-weight: 700; color: #15803d;">lượt</span>
+                                </div>
+                                <div class="metric-sub">Được xác thực trên Smart Contract</div>
+                            </div>
+                        </div>
+
+                        <!-- KPI 4: Tổng Sinh viên tham gia -->
+                        <div class="metric-card card-blocks" style="border-left: 4px solid #4338ca;">
+                            <div class="metric-details">
+                                <div class="metric-title">Tổng Sinh viên tham gia</div>
+                                <div style="display: flex; align-items: baseline; gap: 6px;">
+                                    <div class="metric-value" id="statTotalStudents" style="color: #4338ca;">0</div>
+                                    <span style="font-size: 0.82rem; font-weight: 700; color: #4338ca;">sinh viên</span>
+                                </div>
+                                <div class="metric-sub" id="statRewardedStudents">0 sinh viên đã nhận thưởng</div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
 
-        <!-- ==========================================
-             TAB: PROPOSALS FROM TEACHERS
-             ========================================== -->
-        <section id="tab-proposals" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>📋 Đề Xuất Khen Thưởng từ Giảng Viên</h2>
-                        <span>Ban Quản trị xem xét phê duyệt đề xuất từ Giảng viên để kích hoạt giao dịch cấp Token trên Blockchain</span>
-                    </div>
-                    <div class="panel-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="loadAdminProposals()">
-                            🔄 Làm mới danh sách
-                        </button>
-                    </div>
-                </div>
+                    <!-- Hàng 2: Trung tâm Thao tác Nhanh (Highlight Core Features) -->
+                    <div class="dashboard-core-grid">
+                        <!-- Cột trái (60%): Đề xuất chờ phê duyệt mới nhất -->
+                        <div class="panel dashboard-pending-panel">
+                            <div class="panel-header">
+                                <div class="panel-header-title">
+                                    <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0;">Đề xuất Chờ Phê duyệt Mới nhất</h3>
+                                    <span class="panel-sub-label">Duyệt nhanh và ký giao dịch ghi nhận trực tiếp lên sổ cái IBN</span>
+                                </div>
+                                <div class="panel-actions">
+                                    <button class="btn btn-outline-primary btn-xs" onclick="switchTab('proposals')">
+                                        Xem tất cả đề xuất →
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Giảng viên</th>
+                                            <th>Sinh viên nhận</th>
+                                            <th>Số Token</th>
+                                            <th>Lý do khen thưởng</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dashboardPendingProposalsTableBody">
+                                        <tr>
+                                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 1.75rem;">
+                                                Đang tải danh sách đề xuất chờ duyệt...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Giảng viên đề xuất</th>
-                                <th>Mã SV</th>
-                                <th>Sinh viên nhận</th>
-                                <th>Số Token</th>
-                                <th>Lý do khen thưởng</th>
-                                <th>Trạng thái</th>
-                                <th>Hành động Phê duyệt</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adminProposalsTableBody">
-                            <tr>
-                                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                    Đang tải danh sách đề xuất...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==========================================
-             TAB 2: ISSUE REWARD
-             ========================================== -->
-        <section id="tab-issue" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>🎁 Trao thưởng Token cho Sinh viên</h2>
-                        <span>Giao dịch được ký trực tiếp bởi ví Admin và ghi nhận trên Smart Contract</span>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <form id="issueRewardForm" onsubmit="handleIssueReward(event)">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="issueStudentSelect">Chọn Sinh viên nhận thưởng *</label>
-                                <select id="issueStudentSelect" class="form-control" onchange="onStudentSelectChange()" required>
-                                    <option value="">-- Đang tải danh sách sinh viên --</option>
-                                </select>
+                        <!-- Cột phải (40%): Thông tin Hạ tầng Smart Contract & Giao dịch IBN gần nhất -->
+                        <div class="panel dashboard-infra-panel">
+                            <div class="panel-header">
+                                <div class="panel-header-title">
+                                    <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0;">Hạ tầng Blockchain & Đối soát IBN</h3>
+                                    <span class="panel-sub-label">ICTU Private QBFT (Chain ID 2025)</span>
+                                </div>
+                                <div class="panel-actions">
+                                    <button class="btn-copy-icon" onclick="checkBlockchainHealth()" title="Làm mới trạng thái">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 4 23 10 17 10"></polyline>
+                                            <polyline points="1 20 1 14 7 14"></polyline>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="issueAmount">Số lượng ICTU Token *</label>
-                                <input type="number" id="issueAmount" class="form-control" placeholder="VD: 50, 100, 500" min="1" step="1" required>
-                            </div>
-
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label for="issueReason">Lý do / Danh mục Khen thưởng *</label>
-                                <input type="text" id="issueReason" class="form-control" placeholder="VD: Giải Nhất NCKH Cấp Khoa, Sinh viên Xuất sắc Học kỳ I..." required>
-                            </div>
-
-                            <div class="form-group" style="grid-column: 1 / -1;">
-                                <label for="issueEvidenceFile">📎 Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</label>
-                                <input type="file" id="issueEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'issue')">
-                                <div id="issueEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                                        <div>
-                                            <span id="issueEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
-                                            <span id="issueEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
+                            <div class="panel-body" style="padding-top: 1rem;">
+                                <!-- Smart Contracts List -->
+                                <div class="infra-contracts-box">
+                                    <!-- RewardManager -->
+                                    <div class="infra-contract-item">
+                                        <div class="infra-contract-label-row">
+                                            <span class="infra-contract-name">RewardManager (Quản lý cấp thưởng)</span>
+                                            <span class="badge badge-success-light">Active</span>
                                         </div>
-                                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearEvidenceFile('issue')" style="padding: 2px 8px; font-size: 0.75rem;">✕ Gỡ bỏ</button>
+                                        <div class="infra-contract-addr-row">
+                                            <code class="mono" id="contractManagerAddress">0x76B4...5436</code>
+                                            <div class="infra-btn-group">
+                                                <button class="btn-copy-icon" onclick="copyToClipboard(currentContractAddresses.manager, 'Địa chỉ RewardManager')" title="Sao chép địa chỉ">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                </button>
+                                                <a id="managerExplorerLink" href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="btn-explorer-icon" title="Xem trên IBN Explorer">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
-                                        <span>Mã băm SHA-256: </span>
-                                        <code id="issueEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
+
+                                    <!-- RewardToken -->
+                                    <div class="infra-contract-item" style="margin-top: 8px;">
+                                        <div class="infra-contract-label-row">
+                                            <span class="infra-contract-name">RewardToken (Hợp đồng ERC-20)</span>
+                                            <span class="badge badge-primary-light">ERC-20</span>
+                                        </div>
+                                        <div class="infra-contract-addr-row">
+                                            <code class="mono" id="contractTokenAddress">0x8fAA...788b</code>
+                                            <div class="infra-btn-group">
+                                                <button class="btn-copy-icon" onclick="copyToClipboard(currentContractAddresses.token, 'Địa chỉ RewardToken')" title="Sao chép địa chỉ">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                </button>
+                                                <a id="tokenExplorerLink" href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="btn-explorer-icon" title="Xem trên IBN Explorer">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Block & Chain Info Bar -->
+                                    <div class="infra-block-info-bar" style="margin-top: 8px;">
+                                        <span style="font-size: 0.78rem; color: var(--text-muted);">Khối Blockchain: <strong class="mono" id="statCurrentBlock" style="color: var(--text-primary);">#0</strong></span>
+                                        <span style="font-size: 0.78rem; color: var(--text-muted);" id="statChainId">Chain ID: 2025</span>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <!-- Preview Student Wallet & Current Balance -->
-                        <div id="studentWalletPreview" style="display: none; background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid var(--border);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                                <div>
-                                    <span style="font-size: 0.85rem; color: var(--text-muted);">Địa chỉ ví Ethereum sinh viên:</span>
-                                    <div class="mono" id="previewWallet" style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">--</div>
+                                <!-- Giao dịch IBN gần nhất (Top 3) -->
+                                <div style="margin-top: 14px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Giao dịch IBN gần nhất</span>
+                                        <button class="btn-link-xs" onclick="switchTab('history')">Toàn bộ lịch sử →</button>
+                                    </div>
+                                    <div id="dashboardRecentTxList" class="recent-tx-container">
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 10px;">
+                                            Đang đồng bộ giao dịch on-chain...
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span style="font-size: 0.85rem; color: var(--text-muted);">Số dư hiện tại trên Blockchain:</span>
-                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);" id="previewBalance">0 ICTU</div>
+
+                                <!-- Direct Explorer Link Button -->
+                                <div style="margin-top: 14px;">
+                                    <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block-link">
+                                        <span>Tra cứu Sổ cái IBN Explorer</span>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <polyline points="15 3 21 3 21 9"></polyline>
+                                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                                        </svg>
+                                    </a>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </section>
 
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <button type="submit" id="btnIssueSubmit" class="btn btn-primary" style="padding: 0.85rem 1.75rem;">
-                                🚀 Xác nhận & Ký giao dịch Trao thưởng
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="resetIssueForm()">
-                                🔄 Đặt lại
-                            </button>
+                <!-- ==========================================
+                     TAB 2: PHÊ DUYỆT ĐỀ XUẤT
+                     ========================================== -->
+                <section id="tab-proposals" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Phê duyệt Đề xuất Khen thưởng từ Giảng viên</h2>
+                                <span>Ban Quản trị xem xét phê duyệt đề xuất từ Giảng viên để kích hoạt giao dịch cấp Token trên Blockchain IBN</span>
+                            </div>
+                            <div class="panel-actions">
+                                <button class="btn btn-secondary btn-sm" onclick="loadAdminProposals()">
+                                    Làm mới danh sách
+                                </button>
+                            </div>
                         </div>
-                    </form>
-                </div>
-            </div>
 
-            <!-- Quick Balance Checker -->
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>💰 Tra cứu số dư ví bất kỳ</h2>
-                        <span>Kiểm tra trực tiếp từ hàm balanceOf() của Smart Contract ERC-20</span>
-                    </div>
-                </div>
-                <div class="panel-body">
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
-                        <div class="form-group" style="flex: 1; min-width: 280px;">
-                            <label for="checkWalletInput">Địa chỉ ví Ethereum (0x...)</label>
-                            <input type="text" id="checkWalletInput" class="form-control mono" placeholder="0x...">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Giảng viên đề xuất</th>
+                                        <th>Mã SV</th>
+                                        <th>Sinh viên nhận</th>
+                                        <th>Số Token</th>
+                                        <th>Lý do khen thưởng</th>
+                                        <th>Trạng thái</th>
+                                        <th>Hành động Phê duyệt</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminProposalsTableBody">
+                                    <tr>
+                                        <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                            Đang tải danh sách đề xuất...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <button class="btn btn-secondary" onclick="handleCheckBalanceCustom()" style="height: 48px;">
-                            🔍 Tra cứu số dư
-                        </button>
                     </div>
-                    <div id="checkBalanceResult" style="margin-top: 1rem; display: none;"></div>
-                </div>
-            </div>
-        </section>
+                </section>
 
-        <!-- ==========================================
-             TAB 3: STUDENTS MANAGEMENT
-             ========================================== -->
-        <section id="tab-students" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>👨‍🎓 Danh sách Sinh viên</h2>
-                        <span id="studentCountBadge">(0 sinh viên)</span>
-                    </div>
-                    <div class="panel-actions">
-                        <input type="text" id="studentSearchInput" class="input-search" placeholder="🔍 Tìm kiếm theo Tên, Mã SV, Ví..." oninput="handleStudentSearch()" style="width: 260px;">
-                        <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()">
-                            ➕ Thêm Sinh viên
-                        </button>
-                        <button class="btn btn-secondary btn-sm" onclick="loadStudents()">
-                            🔄 Làm mới
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Mã SV</th>
-                                <th>Họ và Tên</th>
-                                <th>Địa chỉ Ví Blockchain</th>
-                                <th>Email</th>
-                                <th>Đã nhận</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="studentTable">
-                            <tr>
-                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                    Đang tải dữ liệu sinh viên...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==========================================
-             TAB 4: REWARD HISTORY
-             ========================================== -->
-        <section id="tab-history" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>📜 Lịch sử Trao thưởng Toàn hệ thống</h2>
-                        <span id="historyCountBadge">Xác thực với chữ ký & Hash giao dịch</span>
-                    </div>
-                    <div class="panel-actions">
-                        <input type="text" id="historySearchInput" class="input-search" placeholder="🔍 Tìm theo Mã SV, Tên, Lý do, Tx..." oninput="handleHistorySearch()" style="width: 280px;">
-                        <button class="btn btn-secondary btn-sm" onclick="loadHistory(1)">
-                            🔄 Làm mới
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Sinh viên</th>
-                                <th>Số Token</th>
-                                <th>Lý do trao thưởng</th>
-                                <th>Mã giao dịch (Tx Hash)</th>
-                                <th>Thời gian</th>
-                                <th>Chi tiết</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTable">
-                            <tr>
-                                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                    Đang tải lịch sử trao thưởng...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- History Pagination -->
-                <div class="pagination" id="historyPagination" style="padding: 1.25rem 1.75rem;">
-                    <div class="pagination-info" id="historyPaginationInfo">
-                        Hiển thị 0 - 0 trong tổng số 0 bản ghi
-                    </div>
-                    <div class="pagination-controls">
-                        <button class="page-btn" id="btnPrevPage" onclick="changeHistoryPage(-1)">◀ Trang trước</button>
-                        <span id="currentPageIndicator" style="display: inline-flex; align-items: center; padding: 0 10px; font-weight: 600; font-size: 0.85rem;">Trang 1 / 1</span>
-                        <button class="page-btn" id="btnNextPage" onclick="changeHistoryPage(1)">Trang sau ▶</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==========================================
-             TAB 5: LEADERBOARD
-             ========================================== -->
-        <section id="tab-leaderboard" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>🏆 Bảng xếp hạng Top 10 Sinh viên Xuất sắc</h2>
-                        <span>Xếp hạng dựa trên tổng số ICTU Reward Token được tích lũy</span>
-                    </div>
-                    <div class="panel-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="loadLeaderboard()">
-                            🔄 Làm mới Bảng xếp hạng
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">Hạng</th>
-                                <th>Mã SV</th>
-                                <th>Họ và Tên</th>
-                                <th>Địa chỉ Ví</th>
-                                <th>Số lượt thưởng</th>
-                                <th>Tổng Token ICTU</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboardTable">
-                            <tr>
-                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                    Đang tải bảng xếp hạng...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==========================================
-             TAB: WHITELIST GIẢNG VIÊN (SSO)
-             ========================================== -->
-        <section id="tab-whitelist" class="tab-content">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-header-title">
-                        <h2>🛡️ Quản lý Danh sách Cấp quyền Giảng viên (Whitelist SSO)</h2>
-                        <span>Chỉ các email trường (@ictu.edu.vn) có trong danh sách này mới được phép đăng nhập Cổng Giảng viên qua Single Sign-On</span>
-                    </div>
-                    <div class="panel-actions">
-                        <button class="btn btn-secondary btn-sm" onclick="loadWhitelistTable()">
-                            🔄 Làm mới Whitelist
-                        </button>
-                    </div>
-                </div>
-
-                <div class="panel-body">
-                    <!-- Form: Cấp quyền mới -->
-                    <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--text-primary);">➕ Thêm Giảng viên vào Danh sách trắng (Whitelist)</h3>
-                        <form id="addWhitelistForm" onsubmit="handleAddWhitelist(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 160px; gap: 12px; align-items: end;">
-                            <div class="form-group">
-                                <label for="wlEmail">Email trường (@ictu.edu.vn) *</label>
-                                <input type="email" id="wlEmail" class="form-control" placeholder="ten@ictu.edu.vn" required>
+                <!-- ==========================================
+                     TAB 3: CẤP THƯỞNG TRỰC TIẾP
+                     ========================================== -->
+                <section id="tab-issue" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Cấp thưởng Token cho Sinh viên</h2>
+                                <span>Giao dịch được ký trực tiếp bởi ví Admin và ghi nhận trên Smart Contract</span>
                             </div>
-                            <div class="form-group">
-                                <label for="wlName">Họ và tên Giảng viên *</label>
-                                <input type="text" id="wlName" class="form-control" placeholder="TS. Nguyễn Văn A" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="wlDept">Khoa / Bộ môn</label>
-                                <input type="text" id="wlDept" class="form-control" placeholder="Khoa Công nghệ Thông tin" value="Khoa Công nghệ Thông tin">
-                            </div>
-                            <button type="submit" id="btnSubmitWl" class="btn btn-primary" style="padding: 0.65rem 1rem;">
-                                ➕ Cấp quyền
-                            </button>
-                        </form>
+                        </div>
+                        <div class="panel-body">
+                            <form id="issueRewardForm" onsubmit="handleIssueReward(event)">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="issueStudentSelect">Chọn Sinh viên nhận thưởng *</label>
+                                        <select id="issueStudentSelect" class="form-control" onchange="onStudentSelectChange()" required>
+                                            <option value="">-- Đang tải danh sách sinh viên --</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="issueAmount">Số lượng ICTU Token *</label>
+                                        <input type="number" id="issueAmount" class="form-control" placeholder="VD: 50, 100, 500" min="1" step="1" required>
+                                    </div>
+
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label for="issueReason">Lý do / Danh mục Khen thưởng *</label>
+                                        <input type="text" id="issueReason" class="form-control" placeholder="VD: Giải Nhất NCKH Cấp Khoa, Sinh viên Xuất sắc Học kỳ I..." required>
+                                    </div>
+
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label for="issueEvidenceFile">📎 Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</label>
+                                        <input type="file" id="issueEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'issue')">
+                                        <div id="issueEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                                <div>
+                                                    <span id="issueEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
+                                                    <span id="issueEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
+                                                </div>
+                                                <button type="button" class="btn btn-secondary btn-xs" onclick="clearEvidenceFile('issue')">✕ Gỡ bỏ</button>
+                                            </div>
+                                            <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                                                <span>Mã băm SHA-256: </span>
+                                                <code id="issueEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preview Student Wallet & Current Balance -->
+                                <div id="studentWalletPreview" style="display: none; background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                        <div>
+                                            <span style="font-size: 0.85rem; color: var(--text-muted);">Địa chỉ ví Ethereum sinh viên:</span>
+                                            <div class="mono" id="previewWallet" style="font-weight: 600; color: var(--text-primary); margin-top: 2px;">--</div>
+                                        </div>
+                                        <div>
+                                            <span style="font-size: 0.85rem; color: var(--text-muted);">Số dư hiện tại trên Blockchain:</span>
+                                            <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);" id="previewBalance">0 ICTU</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 12px; align-items: center; margin-top: 1rem;">
+                                    <button type="submit" id="btnIssueSubmit" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
+                                        Xác nhận & Ký giao dịch Trao thưởng
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="resetIssueForm()">
+                                        Đặt lại
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
-                    <!-- Whitelist Table -->
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Họ và Tên</th>
-                                    <th>Email trường (@ictu.edu.vn)</th>
-                                    <th>Khoa / Bộ môn</th>
-                                    <th>Trạng thái SSO</th>
-                                    <th>Ngày cấp quyền</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="whitelistTableBody">
-                                <tr>
-                                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                        Đang tải danh sách Whitelist...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Quick Balance Checker -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Tra cứu số dư ví bất kỳ</h2>
+                                <span>Kiểm tra trực tiếp từ hàm balanceOf() của Smart Contract ERC-20</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                                <div class="form-group" style="flex: 1; min-width: 280px;">
+                                    <label for="checkWalletInput">Địa chỉ ví Ethereum (0x...)</label>
+                                    <input type="text" id="checkWalletInput" class="form-control mono" placeholder="0x...">
+                                </div>
+                                <button class="btn btn-secondary" onclick="handleCheckBalanceCustom()" style="height: 44px;">
+                                    Tra cứu số dư
+                                </button>
+                            </div>
+                            <div id="checkBalanceResult" style="margin-top: 1rem; display: none;"></div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        </section>
+                </section>
 
-    </main>
+                <!-- ==========================================
+                     TAB 4: QUẢN LÝ SINH VIÊN
+                     ========================================== -->
+                <section id="tab-students" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Danh sách Sinh viên</h2>
+                                <span id="studentCountBadge">(0 sinh viên)</span>
+                            </div>
+                            <div class="panel-actions">
+                                <input type="text" id="studentSearchInput" class="input-search" placeholder="Tìm theo Tên, Mã SV, Ví..." oninput="handleStudentSearch()" style="width: 260px;">
+                                <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()">
+                                    Thêm Sinh viên
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="loadStudents()">
+                                    Làm mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã SV</th>
+                                        <th>Họ và Tên</th>
+                                        <th>Địa chỉ Ví Blockchain</th>
+                                        <th>Email</th>
+                                        <th>Đã nhận</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTable">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                            Đang tải dữ liệu sinh viên...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     TAB 5: LỊCH SỬ GIAO DỊCH IBN
+                     ========================================== -->
+                <section id="tab-history" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Lịch sử Giao dịch & Đối soát IBN</h2>
+                                <span id="historyCountBadge">Xác thực với chữ ký & Hash giao dịch trên Smart Contract</span>
+                            </div>
+                            <div class="panel-actions">
+                                <input type="text" id="historySearchInput" class="input-search" placeholder="Tìm Mã SV, Tên, Lý do, Tx..." oninput="handleHistorySearch()" style="width: 280px;">
+                                <button class="btn btn-secondary btn-sm" onclick="loadHistory(1)">
+                                    Làm mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Sinh viên</th>
+                                        <th>Số Token</th>
+                                        <th>Lý do trao thưởng</th>
+                                        <th>Mã giao dịch (Tx Hash)</th>
+                                        <th>Thời gian</th>
+                                        <th>Chi tiết</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTable">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                            Đang tải lịch sử trao thưởng...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- History Pagination -->
+                        <div class="pagination" id="historyPagination" style="padding: 1.25rem 1.75rem;">
+                            <div class="pagination-info" id="historyPaginationInfo">
+                                Hiển thị 0 - 0 trong tổng số 0 bản ghi
+                            </div>
+                            <div class="pagination-controls">
+                                <button class="page-btn" id="btnPrevPage" onclick="changeHistoryPage(-1)">◀ Trang trước</button>
+                                <span id="currentPageIndicator" style="display: inline-flex; align-items: center; padding: 0 10px; font-weight: 600; font-size: 0.85rem;">Trang 1 / 1</span>
+                                <button class="page-btn" id="btnNextPage" onclick="changeHistoryPage(1)">Trang sau ▶</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     TAB 6: BẢNG XẾP HẠNG
+                     ========================================== -->
+                <section id="tab-leaderboard" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Bảng xếp hạng Top 10 Sinh viên Xuất sắc</h2>
+                                <span>Xếp hạng dựa trên tổng số ICTU Reward Token được tích lũy</span>
+                            </div>
+                            <div class="panel-actions">
+                                <button class="btn btn-secondary btn-sm" onclick="loadLeaderboard()">
+                                    Làm mới Bảng xếp hạng
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px;">Hạng</th>
+                                        <th>Mã SV</th>
+                                        <th>Họ và Tên</th>
+                                        <th>Địa chỉ Ví</th>
+                                        <th>Số lượt thưởng</th>
+                                        <th>Tổng Token ICTU</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leaderboardTable">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                            Đang tải bảng xếp hạng...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==========================================
+                     TAB 7: DANH SÁCH GIẢNG VIÊN (WHITELIST)
+                     ========================================== -->
+                <section id="tab-whitelist" class="tab-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div class="panel-header-title">
+                                <h2>Quản lý Danh sách Cấp quyền Giảng viên (Whitelist SSO)</h2>
+                                <span>Chỉ các email trường (@ictu.edu.vn) có trong danh sách này mới được phép đăng nhập Cổng Giảng viên qua Single Sign-On</span>
+                            </div>
+                            <div class="panel-actions">
+                                <button class="btn btn-secondary btn-sm" onclick="loadWhitelistTable()">
+                                    Làm mới Whitelist
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="panel-body">
+                            <!-- Form: Cấp quyền mới -->
+                            <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                                <h3 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Thêm Giảng viên vào Danh sách trắng (Whitelist)</h3>
+                                <form id="addWhitelistForm" onsubmit="handleAddWhitelist(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 160px; gap: 12px; align-items: end;">
+                                    <div class="form-group">
+                                        <label for="wlEmail">Email trường (@ictu.edu.vn) *</label>
+                                        <input type="email" id="wlEmail" class="form-control" placeholder="ten@ictu.edu.vn" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wlName">Họ và tên Giảng viên *</label>
+                                        <input type="text" id="wlName" class="form-control" placeholder="TS. Nguyễn Văn A" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="wlDept">Khoa / Bộ môn</label>
+                                        <input type="text" id="wlDept" class="form-control" placeholder="Khoa Công nghệ Thông tin" value="Khoa Công nghệ Thông tin">
+                                    </div>
+                                    <button type="submit" id="btnSubmitWl" class="btn btn-primary" style="padding: 0.65rem 1rem;">
+                                        Cấp quyền
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Whitelist Table -->
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Họ và Tên</th>
+                                            <th>Email trường (@ictu.edu.vn)</th>
+                                            <th>Khoa / Bộ môn</th>
+                                            <th>Trạng thái SSO</th>
+                                            <th>Ngày cấp quyền</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="whitelistTableBody">
+                                        <tr>
+                                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                                Đang tải danh sách Whitelist...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>Đề tài Nghiên cứu Khoa học: <b>Ứng dụng Công nghệ Blockchain trong Quản lý & Khen thưởng Sinh viên ICTU</b></p>
+                <p style="margin-top: 4px; font-size: 0.78rem;">Trường Đại học Công nghệ Thông tin và Truyền thông - Đại học Thái Nguyên</p>
+            </footer>
+
+        </div>
+    </div>
 
     <!-- ==========================================
          MODAL: THÊM SINH VIÊN MỚI
@@ -510,7 +717,7 @@
     <div id="addStudentModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">➕ Thêm Sinh viên Mới</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">Thêm Sinh viên Mới</h3>
                 <button class="btn-icon" onclick="closeModal('addStudentModal')">✕</button>
             </div>
             <form onsubmit="handleAddStudentSubmit(event)">
@@ -551,7 +758,7 @@
     <div id="editStudentModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">✏️ Chỉnh sửa Thông tin Sinh viên</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">Chỉnh sửa Thông tin Sinh viên</h3>
                 <button class="btn-icon" onclick="closeModal('editStudentModal')">✕</button>
             </div>
             <form onsubmit="handleEditStudentSubmit(event)">
@@ -588,7 +795,7 @@
     <div id="txReceiptModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 600px;">
             <div class="modal-header">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">🧾 Biên lai Giao dịch Blockchain</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">Biên lai Giao dịch Blockchain</h3>
                 <button class="btn-icon" onclick="closeModal('txReceiptModal')">✕</button>
             </div>
             <div class="modal-body" id="txReceiptContent">
@@ -606,7 +813,7 @@
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 650px;">
             <div class="modal-header">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">📎 Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700;">Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
                 <button class="btn-icon" onclick="closeModal('evidenceModal')">✕</button>
             </div>
             <div class="modal-body" id="evidenceModalBody">
@@ -617,16 +824,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>Đề tài Nghiên cứu Khoa học: <b>Ứng dụng Công nghệ Blockchain trong Quản lý & Khen thưởng Sinh viên ICTU</b></p>
-        <p style="margin-top: 4px; font-size: 0.78rem;">Trường Đại học Công nghệ Thông tin và Truyền thông - Đại học Thái Nguyên</p>
-        <p style="margin-top: 6px; font-size: 0.74rem; color: var(--text-muted);">
-            <span>🌐 Máy chủ API: <code id="displayApiBase"></code></span>
-            <button type="button" onclick="promptConfigApiUrl()" style="background: none; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; cursor: pointer; color: var(--text-primary); margin-left: 6px;">⚙️ Đổi máy chủ</button>
-        </p>
-    </footer>
 
     <script src="auth.js"></script>
     <script src="app.js"></script>
