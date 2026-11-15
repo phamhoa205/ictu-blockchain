@@ -6,195 +6,280 @@
     <title>Cổng Giảng viên | ICTU Blockchain Reward System</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="admin-body">
 
-    <!-- ==========================================
-         Top Navigation Bar
-         ========================================== -->
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="brand">
-                <div class="brand-logo">👨‍🏫</div>
-                <div class="brand-text">
-                    <h1>Cổng Thông tin Giảng viên</h1>
-                    <span>Trường Đại học Công nghệ Thông tin và Truyền thông (ICTU)</span>
+    <div class="admin-layout">
+
+        <!-- ==========================================
+             1. FIXED LEFT SIDEBAR (250px)
+             ========================================== -->
+        <aside id="adminSidebar" class="admin-sidebar">
+            <!-- Sidebar Brand Header -->
+            <div class="sidebar-brand-box">
+                <img src="./ictu-logo.png" alt="Logo ICTU" class="sidebar-logo">
+                <div class="sidebar-brand-text">
+                    <span class="sidebar-brand-title">ICTU REWARD</span>
+                    <span class="sidebar-brand-subtitle">Cổng Giảng viên</span>
                 </div>
             </div>
 
-            <div class="nav-status">
-                <span class="status-dot"></span>
-                <span>Mạng Blockchain: Sẵn sàng</span>
-            </div>
+            <!-- Sidebar Navigation Menu -->
+            <nav class="sidebar-menu">
+                <div class="sidebar-group-title">Nghiệp vụ Giảng viên</div>
 
-            <div class="nav-user">
-                <div class="user-badge">
-                    <div class="user-avatar" id="teacherAvatar" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">GV</div>
-                    <div class="user-info">
-                        <span class="user-name" id="teacherNameDisplay">Giảng viên</span>
-                        <span class="user-role-tag" style="background: #e0f2fe; color: #0284c7;">GIẢNG VIÊN</span>
-                    </div>
-                </div>
-                <button class="btn btn-secondary btn-sm" onclick="logout()">
-                    🚪 Đăng xuất
+                <button class="sidebar-nav-item active" data-tab="overview" onclick="switchTeacherTab('overview')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    <span>Tổng quan & Lập đề xuất</span>
+                </button>
+
+                <button class="sidebar-nav-item" data-tab="proposals" onclick="switchTeacherTab('proposals')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>Danh sách Đề xuất của tôi</span>
+                </button>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="sidebar-external-link">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>Mở Cổng IBN Explorer ↗</span>
+                </a>
+                <button type="button" onclick="promptConfigApiUrl()" class="sidebar-server-btn">
+                    <span>Máy chủ: <code id="displayApiBase" style="color: #93c5fd;"></code></span>
                 </button>
             </div>
-        </div>
-    </header>
+        </aside>
 
-    <!-- ==========================================
-         Main Wrapper
-         ========================================== -->
-    <main class="main-wrapper">
+        <!-- Backdrop overlay for mobile menu -->
+        <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
-        <!-- Top Overview Metrics -->
-        <div class="metrics-grid">
-            <div class="metric-card card-students">
-                <div class="metric-icon">👥</div>
-                <div class="metric-details">
-                    <div class="metric-title">Tổng Sinh viên Hệ thống</div>
-                    <div class="metric-value" id="metricTotalStudents">--</div>
-                    <div class="metric-sub">Sinh viên trong cơ sở dữ liệu</div>
+        <!-- ==========================================
+             2. MAIN WORKSPACE CONTENT
+             ========================================== -->
+        <div class="admin-main">
+
+            <!-- Topbar Header -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="mobile-toggle-btn" onclick="toggleMobileSidebar()" aria-label="Mở Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1 class="topbar-title" id="currentSectionTitle">Tổng quan & Lập đề xuất</h1>
                 </div>
-            </div>
 
-            <div class="metric-card card-rewards">
-                <div class="metric-icon">⏳</div>
-                <div class="metric-details">
-                    <div class="metric-title">Đề xuất Chờ phê duyệt</div>
-                    <div class="metric-value" id="metricPendingProposals" style="color: var(--warning);">0</div>
-                    <div class="metric-sub">Đang chờ Ban Quản trị ký duyệt</div>
-                </div>
-            </div>
+                <div class="topbar-right">
+                    <!-- Blockchain Status Badge -->
+                    <div class="network-badge status-connected" id="blockchainStatusBadge">
+                        <span class="status-pulse-dot"></span>
+                        <span id="blockchainStatusText">IBN Production • Chain 2025</span>
+                    </div>
 
-            <div class="metric-card card-tokens">
-                <div class="metric-icon">✅</div>
-                <div class="metric-details">
-                    <div class="metric-title">Đề xuất Đã ghi nhận On-Chain</div>
-                    <div class="metric-value" id="metricApprovedProposals" style="color: var(--success);">0</div>
-                    <div class="metric-sub">Đã phát hành token thành công</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Form: Lập đề xuất khen thưởng -->
-        <div class="panel">
-            <div class="panel-header">
-                <div class="panel-header-title">
-                    <h2>📝 Lập Đề Xuất Khen Thưởng Sinh Viên</h2>
-                    <span>Giảng viên lập đề xuất khen thưởng học thuật, NCKH để gửi Ban Quản trị phê duyệt và ký Smart Contract</span>
-                </div>
-            </div>
-            <div class="panel-body">
-                <form id="proposalForm" onsubmit="handleProposalSubmit(event)">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
-                        <div class="form-group">
-                            <label for="proposalStudentSelect">Chọn Sinh viên nhận thưởng *</label>
-                            <select id="proposalStudentSelect" class="form-control" onchange="handleStudentSelectChange()" required>
-                                <option value="">-- Đang tải danh sách sinh viên --</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="proposalAmount">Số Token khen thưởng (ICTU) *</label>
-                            <input 
-                                type="number" 
-                                id="proposalAmount" 
-                                class="form-control" 
-                                placeholder="VD: 50, 100, 200" 
-                                min="1" 
-                                step="1" 
-                                required
-                            >
+                    <!-- Teacher Profile Badge -->
+                    <div class="topbar-user-wrap">
+                        <div class="user-avatar-circle" id="teacherAvatar" style="background: linear-gradient(135deg, #0284c7, #1e40af);">GV</div>
+                        <div class="user-text-info">
+                            <span class="user-display-name" id="teacherNameDisplay">Giảng viên</span>
+                            <span class="user-display-role">GIẢNG VIÊN</span>
                         </div>
                     </div>
 
-                    <!-- Selected Student Quick Preview -->
-                    <div id="selectedStudentPreview" style="display: none; margin-top: 1rem; padding: 12px 16px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px solid var(--border);">
-                        <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.88rem;">
-                            <div>Gmail: <strong id="previewStudentEmail">--</strong></div>
-                            <div>Mã SV: <strong id="previewStudentId"></strong></div>
-                            <div>Ví nhận thưởng: <span class="mono" id="previewStudentWallet" style="color: var(--primary);">--</span></div>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 1.25rem;">
-                        <label for="proposalReason">Lý do & Thành tích khen thưởng *</label>
-                        <input 
-                            type="text" 
-                            id="proposalReason" 
-                            class="form-control" 
-                            placeholder="VD: Đạt Giải Nhất Nghiên cứu khoa học sinh viên cấp Khoa CNTT năm học 2025-2026" 
-                            required
-                        >
-                    </div>
-
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label for="proposalEvidenceFile">📎 Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</label>
-                        <input type="file" id="proposalEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'proposal')">
-                        <div id="proposalEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                                <div>
-                                    <span id="proposalEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
-                                    <span id="proposalEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
-                                </div>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="clearEvidenceFile('proposal')" style="padding: 2px 8px; font-size: 0.75rem;">✕ Gỡ bỏ</button>
-                            </div>
-                            <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
-                                <span>Mã băm SHA-256: </span>
-                                <code id="proposalEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
-                        <button type="submit" id="submitProposalBtn" class="btn btn-primary" style="padding: 0.75rem 1.75rem;">
-                            🚀 Gửi Đề Xuất Phê Duyệt
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Proposals List Panel -->
-        <div class="panel">
-            <div class="panel-header">
-                <div class="panel-header-title">
-                    <h2>📋 Danh Sách Đề Xuất Của Tôi</h2>
-                    <span>Theo dõi trạng thái xét duyệt và biên lai giao dịch Blockchain của các đề xuất</span>
-                </div>
-                <div class="panel-actions">
-                    <button class="btn btn-secondary btn-sm" onclick="loadMyProposals()">
-                        🔄 Làm mới danh sách
+                    <!-- Logout Button -->
+                    <button class="btn-topbar-logout" onclick="logout()" title="Đăng xuất khỏi hệ thống">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <span>Đăng xuất</span>
                     </button>
                 </div>
-            </div>
+            </header>
 
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Mã SV</th>
-                            <th>Họ và tên</th>
-                            <th>Số Token</th>
-                            <th>Lý do đề xuất</th>
-                            <th>Trạng thái duyệt</th>
-                            <th>Mã Tx Blockchain</th>
-                            <th>Thời gian gửi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="proposalsTableBody">
-                        <tr>
-                            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                                Đang tải danh sách đề xuất...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <!-- Main Workspace Content Area -->
+            <main class="admin-content-area" id="adminContentArea">
+
+                <!-- HÀNG 1: 3 Thẻ Chỉ Số KPI Tinh Gọn -->
+                <div class="metrics-grid">
+                    <!-- KPI 1: Tổng sinh viên hệ thống -->
+                    <div class="metric-card card-students">
+                        <div class="metric-details">
+                            <div class="metric-title">Tổng Sinh viên Hệ thống</div>
+                            <div class="metric-value" id="metricTotalStudents">--</div>
+                            <div class="metric-sub">Sinh viên trong cơ sở dữ liệu</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 2: Đề xuất chờ phê duyệt -->
+                    <div class="metric-card card-rewards">
+                        <div class="metric-details">
+                            <div class="metric-title">Đề xuất Chờ phê duyệt</div>
+                            <div class="metric-value" id="metricPendingProposals" style="color: var(--warning);">0</div>
+                            <div class="metric-sub">Đang chờ Ban Quản trị ký duyệt</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI 3: Đề xuất đã ghi nhận on-chain -->
+                    <div class="metric-card card-tokens">
+                        <div class="metric-details">
+                            <div class="metric-title">Đề xuất Đã ghi nhận On-Chain</div>
+                            <div class="metric-value" id="metricApprovedProposals" style="color: var(--success);">0</div>
+                            <div class="metric-sub">Đã phát hành token thành công</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HÀNG 2: Khối Lập Đề Xuất Khen Thưởng Sinh Viên -->
+                <div class="panel" id="proposalFormPanel" style="margin-top: 1.5rem;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Lập Đề Xuất Khen Thưởng Sinh Viên</h2>
+                            <span>Giảng viên lập đề xuất khen thưởng học thuật, NCKH gửi Ban Quản trị phê duyệt và ký Smart Contract</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="proposalForm" onsubmit="handleProposalSubmit(event)">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                                <div class="form-group">
+                                    <label for="proposalStudentSelect">Chọn Sinh viên nhận thưởng *</label>
+                                    <select id="proposalStudentSelect" class="form-control" onchange="handleStudentSelectChange()" required>
+                                        <option value="">-- Đang tải danh sách sinh viên --</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="proposalAmount">Số Token khen thưởng (ICTU) *</label>
+                                    <input 
+                                        type="number" 
+                                        id="proposalAmount" 
+                                        class="form-control" 
+                                        placeholder="VD: 50, 100, 200" 
+                                        min="1" 
+                                        step="1" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+
+                            <!-- Selected Student Quick Preview -->
+                            <div id="selectedStudentPreview" style="display: none; margin-top: 1rem; padding: 12px 16px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                                <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.88rem;">
+                                    <div>Gmail: <strong id="previewStudentEmail">--</strong></div>
+                                    <div>Mã SV: <strong id="previewStudentId"></strong></div>
+                                    <div>Ví nhận thưởng: <span class="mono" id="previewStudentWallet" style="color: var(--primary);">--</span></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1.25rem;">
+                                <label for="proposalReason">Lý do & Thành tích khen thưởng *</label>
+                                <input 
+                                    type="text" 
+                                    id="proposalReason" 
+                                    class="form-control" 
+                                    placeholder="VD: Đạt Giải Nhất Nghiên cứu khoa học sinh viên cấp Khoa CNTT năm học 2025-2026" 
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group" style="margin-top: 1.25rem;">
+                                <label for="proposalEvidenceFile" style="display: flex; align-items: center; gap: 6px;">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                    </svg>
+                                    <span>Tệp minh chứng đính kèm (PDF, Ảnh giấy khen, Quyết định - Tối đa 2MB)</span>
+                                </label>
+                                <input type="file" id="proposalEvidenceFile" class="form-control" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="handleEvidenceFileSelect(event, 'proposal')">
+                                <div id="proposalEvidencePreview" style="display: none; margin-top: 8px; padding: 10px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); border: 1px dashed var(--border);">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                        <div>
+                                            <span id="proposalEvidenceFileName" style="font-weight: 600; color: var(--text-primary);">--</span>
+                                            <span id="proposalEvidenceFileSize" style="font-size: 0.8rem; color: var(--text-muted); margin-left: 6px;">(--)</span>
+                                        </div>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="clearEvidenceFile('proposal')" style="padding: 2px 8px; font-size: 0.75rem;">✕ Gỡ bỏ</button>
+                                    </div>
+                                    <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                                        <span>Mã băm SHA-256: </span>
+                                        <code id="proposalEvidenceFileHash" class="mono" style="color: var(--primary); font-size: 0.78rem; word-break: break-all;">0x...</code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                                <button type="submit" id="submitProposalBtn" class="btn btn-primary" style="padding: 0.75rem 1.75rem; display: inline-flex; align-items: center; gap: 8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                    <span>Gửi Đề Xuất Phê Duyệt</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- HÀNG 3: Bảng Danh Sách Đề Xuất Của Tôi -->
+                <div class="panel" id="proposalsPanel" style="margin-top: 1.5rem;">
+                    <div class="panel-header">
+                        <div class="panel-header-title">
+                            <h2>Danh Sách Đề Xuất Của Tôi</h2>
+                            <span>Theo dõi trạng thái xét duyệt và biên lai giao dịch Blockchain của các đề xuất</span>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="loadMyProposals()" style="display: inline-flex; align-items: center; gap: 6px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="23 4 23 10 17 10"></polyline>
+                                    <polyline points="1 20 1 14 7 14"></polyline>
+                                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                                </svg>
+                                <span>Làm mới danh sách</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Mã SV</th>
+                                    <th>Họ và tên</th>
+                                    <th>Số Token</th>
+                                    <th>Lý do đề xuất</th>
+                                    <th>Trạng thái duyệt</th>
+                                    <th>Mã Tx Blockchain</th>
+                                    <th>Thời gian gửi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proposalsTableBody">
+                                <tr>
+                                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                        Đang tải danh sách đề xuất...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
         </div>
-
-    </main>
+    </div>
 
     <!-- ==========================================
          MODAL: MINH CHỨNG KHEN THƯỞNG & SHA-256
@@ -202,7 +287,12 @@
     <div id="evidenceModal" class="modal-overlay">
         <div class="modal-card" style="max-width: 650px;">
             <div class="modal-header">
-                <h3 style="font-size: 1.15rem; font-weight: 700;">📎 Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                    </svg>
+                    <span>Minh Chứng Khen Thưởng & Toàn Vẹn Dữ Liệu</span>
+                </h3>
                 <button class="btn-icon" onclick="closeModal('evidenceModal')">✕</button>
             </div>
             <div class="modal-body" id="evidenceModalBody">
@@ -213,15 +303,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <p>Hệ thống Khen thưởng Blockchain Sinh viên ICTU • Đại học Thái Nguyên</p>
-        <p style="margin-top: 6px; font-size: 0.74rem; color: var(--text-muted);">
-            <span>🌐 Máy chủ API: <code id="displayApiBase"></code></span>
-            <button type="button" onclick="promptConfigApiUrl()" style="background: none; border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; cursor: pointer; color: var(--text-primary); margin-left: 6px;">⚙️ Đổi máy chủ</button>
-        </p>
-    </footer>
 
     <script src="auth.js"></script>
     <script src="teacher.js"></script>

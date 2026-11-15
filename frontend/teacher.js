@@ -165,7 +165,19 @@ async function handleProposalSubmit(event) {
     }
 
     submitBtn.disabled = true;
-    submitBtn.innerHTML = "⏳ Đang gửi đề xuất...";
+    submitBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon" style="animation: spin 1s linear infinite;">
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="22" y2="12"></line>
+            <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+            <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+        <span>Đang gửi đề xuất...</span>
+    `;
 
     const evidence = window.currentEvidence && window.currentEvidence.proposal ? window.currentEvidence.proposal : null;
 
@@ -188,11 +200,17 @@ async function handleProposalSubmit(event) {
         if (!response.ok) {
             showToast(data.error || "Gửi đề xuất thất bại", "error");
             submitBtn.disabled = false;
-            submitBtn.innerHTML = "🚀 Gửi Đề Xuất Phê Duyệt";
+            submitBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span>Gửi Đề Xuất Phê Duyệt</span>
+            `;
             return;
         }
 
-        showToast("🎉 Đề xuất khen thưởng đã được gửi thành công tới Ban Quản trị!", "success");
+        showToast("Đề xuất khen thưởng đã được gửi thành công tới Ban Quản trị!", "success");
         amountInput.value = "";
         reasonInput.value = "";
         select.value = "";
@@ -208,7 +226,59 @@ async function handleProposalSubmit(event) {
         showToast("Lỗi kết nối máy chủ backend", "error");
     } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = "🚀 Gửi Đề Xuất Phê Duyệt";
+        submitBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <span>Gửi Đề Xuất Phê Duyệt</span>
+        `;
+    }
+}
+
+// ==========================================
+// Navigation & Mobile Drawer Helpers
+// ==========================================
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.toggle("open");
+    if (overlay) overlay.classList.toggle("active");
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.remove("open");
+    if (overlay) overlay.classList.remove("active");
+}
+
+function switchTeacherTab(tabName) {
+    const titleEl = document.getElementById("currentSectionTitle");
+    const navItems = document.querySelectorAll(".sidebar-nav-item");
+
+    navItems.forEach(item => {
+        if (item.dataset.tab === tabName) {
+            item.classList.add("active");
+        } else {
+            item.classList.remove("active");
+        }
+    });
+
+    closeMobileSidebar();
+
+    if (tabName === "proposals") {
+        if (titleEl) titleEl.textContent = "Danh sách Đề xuất của tôi";
+        const target = document.getElementById("proposalsPanel");
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+        }
+    } else {
+        if (titleEl) titleEl.textContent = "Tổng quan & Lập đề xuất";
+        const target = document.getElementById("proposalFormPanel") || document.getElementById("adminContentArea");
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+        }
     }
 }
 
@@ -249,19 +319,24 @@ async function loadMyProposals() {
 
             let statusBadge = "";
             if (p.status === "PENDING") {
-                statusBadge = `<span class="badge" style="background: #fef3c7; color: #b45309; font-weight: 600;">⏳ Chờ duyệt</span>`;
+                statusBadge = `<span class="badge badge-warning">Chờ duyệt</span>`;
             } else if (p.status === "APPROVED") {
-                statusBadge = `<span class="badge" style="background: #d1fae5; color: #065f46; font-weight: 600;">✅ Đã ký Blockchain</span>`;
+                statusBadge = `<span class="badge badge-success">Đã ký Blockchain</span>`;
             } else {
-                statusBadge = `<span class="badge" style="background: #fee2e2; color: #b91c1c; font-weight: 600;" title="${p.rejectReason || ''}">❌ Từ chối</span>`;
+                statusBadge = `<span class="badge badge-danger" title="${p.rejectReason || ''}">Từ chối</span>`;
             }
 
             let txDisplay = "--";
             if (p.transactionHash) {
                 txDisplay = `
-                    <div style="display: flex; align-items: center; gap: 4px;">
-                        <span class="mono" style="color: var(--primary); font-size: 0.8rem;">${shortAddress(p.transactionHash)}</span>
-                        <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${p.transactionHash}', 'Mã Tx')">📋</button>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer">${shortAddress(p.transactionHash)} ↗</a>
+                        <button class="btn-copy-icon" onclick="copyToClipboard('${p.transactionHash}', 'Mã Tx')" title="Sao chép Tx Hash">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
                     </div>
                 `;
             }
@@ -277,8 +352,11 @@ async function loadMyProposals() {
                             studentName: p.studentName,
                             studentId: p.studentId,
                             reason: p.reason
-                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
-                            📎 Xem minh chứng
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary); display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                            <span>Xem minh chứng</span>
                         </button>
                     </div>
                 `;

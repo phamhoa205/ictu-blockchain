@@ -1888,6 +1888,27 @@ select.form-control {
     transition: all 0.15s ease;
 }
 
+.btn-topbar-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-topbar-action:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
 .btn-topbar-logout:hover {
     background-color: #fee2e2;
     border-color: #fca5a5;
@@ -2237,7 +2258,8 @@ select.form-control {
         display: none;
     }
 
-    .btn-topbar-logout span {
+    .btn-topbar-logout span,
+    .btn-topbar-action span {
         display: none;
     }
 }

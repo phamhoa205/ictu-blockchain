@@ -124,7 +124,7 @@ async function loadStudentRewards() {
             table.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
-                        🎉 Bạn chưa có phần thưởng nào. Hãy tích cực tham gia nghiên cứu khoa học & phong trào học tập nhé!
+                        Chưa có phần thưởng nào. Hãy tích cực tham gia nghiên cứu khoa học & phong trào học tập nhé!
                     </td>
                 </tr>
             `;
@@ -143,8 +143,11 @@ async function loadStudentRewards() {
                             studentName: currentStudentProfile ? currentStudentProfile.name : "Sinh viên",
                             studentId: currentStudentProfile ? currentStudentProfile.studentId : "--",
                             reason: item.reason
-                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary);">
-                            📎 Xem minh chứng
+                        }).replace(/"/g, '&quot;')})" style="padding: 2px 8px; font-size: 0.74rem; border-color: var(--primary); color: var(--primary); display: inline-flex; align-items: center; gap: 4px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                            </svg>
+                            <span>Xem minh chứng</span>
                         </button>
                     </div>
                 `;
@@ -153,8 +156,8 @@ async function loadStudentRewards() {
             return `
             <tr>
                 <td>
-                    <span class="badge badge-token" style="font-size: 0.9rem;">
-                        🪙 +${item.amount} ICTU
+                    <span class="badge badge-token" style="font-size: 0.88rem;">
+                        +${item.amount} ICTU
                     </span>
                 </td>
                 <td>
@@ -163,19 +166,31 @@ async function loadStudentRewards() {
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 6px;">
-                        <span class="mono" style="color: var(--primary); font-size: 0.85rem;">${shortAddress(item.transactionHash)}</span>
-                        <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${item.transactionHash}', 'Mã Tx Hash')" title="Sao chép Tx Hash">📋</button>
+                        <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer">${shortAddress(item.transactionHash)} ↗</a>
+                        <button class="btn-copy-icon" onclick="copyToClipboard('${item.transactionHash}', 'Mã Tx Hash')" title="Sao chép Tx Hash">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
                     </div>
                 </td>
                 <td style="font-size: 0.85rem; color: var(--text-secondary);">${formatDate(item.createdAt)}</td>
                 <td>
-                    <span class="badge" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
-                        ✅ Đã xác nhận
+                    <span class="badge badge-success">
+                        Đã xác nhận
                     </span>
                 </td>
                 <td>
-                    <button class="btn btn-secondary btn-sm" onclick="viewReceipt(${JSON.stringify(item).replace(/"/g, '&quot;')})">
-                        🔍 Biên lai
+                    <button class="btn btn-secondary btn-sm" onclick="viewReceipt(${JSON.stringify(item).replace(/"/g, '&quot;')})" style="display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span>Biên lai</span>
                     </button>
                 </td>
             </tr>
@@ -201,6 +216,52 @@ function copyWallet() {
 }
 
 // ==========================================
+// Navigation & Mobile Drawer Helpers
+// ==========================================
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.toggle("open");
+    if (overlay) overlay.classList.toggle("active");
+}
+
+function closeMobileSidebar() {
+    const sidebar = document.getElementById("adminSidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar) sidebar.classList.remove("open");
+    if (overlay) overlay.classList.remove("active");
+}
+
+function switchStudentTab(tabName) {
+    const titleEl = document.getElementById("currentSectionTitle");
+    const navItems = document.querySelectorAll(".sidebar-nav-item");
+
+    navItems.forEach(item => {
+        if (item.dataset.tab === tabName) {
+            item.classList.add("active");
+        } else {
+            item.classList.remove("active");
+        }
+    });
+
+    closeMobileSidebar();
+
+    if (tabName === "history") {
+        if (titleEl) titleEl.textContent = "Lịch sử Khen thưởng & Biên lai";
+        const target = document.getElementById("studentHistoryPanel");
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+        }
+    } else {
+        if (titleEl) titleEl.textContent = "Tổng quan & Ví Blockchain";
+        const target = document.getElementById("studentOverviewArea");
+        if (target) {
+            target.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+}
+
+// ==========================================
 // Modal Helpers
 // ==========================================
 function openModal(modalId) {
@@ -220,13 +281,13 @@ function viewReceipt(item) {
     content.innerHTML = `
         <div style="background: var(--bg-alt); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                <span style="font-weight: 700; color: var(--primary); font-size: 1.1rem;">Khen thưởng Học thuật ICTU</span>
-                <span class="badge badge-token">🪙 +${item.amount} ICTU</span>
+                <span style="font-weight: 700; color: var(--primary); font-size: 1.05rem;">Khen thưởng Học thuật ICTU</span>
+                <span class="badge badge-token">+${item.amount} ICTU</span>
             </div>
             
             <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 0.88rem;">
                 <span style="color: var(--text-muted);">Sinh viên nhận:</span>
-                <span><b>${currentStudentProfile ? currentStudentProfile.name : "Sinh viên"}</b></span>
+                <span><strong>${currentStudentProfile ? currentStudentProfile.name : "Sinh viên"}</strong></span>
 
                 <span style="color: var(--text-muted);">Lý do khen thưởng:</span>
                 <span>${item.reason || "Khen thưởng học thuật"}</span>
@@ -236,15 +297,20 @@ function viewReceipt(item) {
 
                 <span style="color: var(--text-muted);">Mã giao dịch (Tx):</span>
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <span class="mono" style="word-break: break-all; color: var(--primary); font-size: 0.82rem;">${item.transactionHash}</span>
-                    <button class="btn btn-icon btn-sm" onclick="copyToClipboard('${item.transactionHash}', 'Mã Tx')">📋</button>
+                    <a href="https://ibn.ictu.edu.vn/explorer" target="_blank" rel="noopener noreferrer" class="mono recent-tx-link" title="Xem trên IBN Explorer" style="word-break: break-all;">${item.transactionHash} ↗</a>
+                    <button class="btn-copy-icon" onclick="copyToClipboard('${item.transactionHash}', 'Mã Tx')" title="Sao chép Tx">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </button>
                 </div>
 
                 <span style="color: var(--text-muted);">Thời gian cấp:</span>
                 <span>${formatDate(item.createdAt)}</span>
 
                 <span style="color: var(--text-muted);">Trạng thái chuỗi:</span>
-                <span style="color: var(--success); font-weight: 600;">Đã xác thực trên Hardhat Node</span>
+                <span style="color: var(--success); font-weight: 600;">Đã xác thực trên Mạng IBN (Besu QBFT)</span>
             </div>
         </div>
         <p style="font-size: 0.78rem; color: var(--text-muted); text-align: center;">
@@ -286,7 +352,7 @@ async function handleChangePasswordSubmit(event) {
     }
 
     saveBtn.disabled = true;
-    saveBtn.innerHTML = "⏳ Đang cập nhật...";
+    saveBtn.innerHTML = "Đang cập nhật...";
 
     try {
         const response = await fetch(`${API_BASE}/auth/change-password`, {
@@ -300,19 +366,19 @@ async function handleChangePasswordSubmit(event) {
         if (!response.ok) {
             showToast(data.error || "Đổi mật khẩu thất bại", "error");
             saveBtn.disabled = false;
-            saveBtn.innerHTML = "💾 Lưu mật khẩu";
+            saveBtn.innerHTML = "Lưu mật khẩu";
             return;
         }
 
-        showToast("🎉 Đổi mật khẩu thành công! Vui lòng ghi nhớ mật khẩu mới.", "success");
+        showToast("Đổi mật khẩu thành công! Vui lòng ghi nhớ mật khẩu mới.", "success");
         closeModal("changePasswordModal");
         saveBtn.disabled = false;
-        saveBtn.innerHTML = "💾 Lưu mật khẩu";
+        saveBtn.innerHTML = "Lưu mật khẩu";
     } catch (err) {
         console.error("Change password error:", err);
         showToast("Lỗi kết nối máy chủ", "error");
         saveBtn.disabled = false;
-        saveBtn.innerHTML = "💾 Lưu mật khẩu";
+        saveBtn.innerHTML = "Lưu mật khẩu";
     }
 }
 
